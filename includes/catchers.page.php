@@ -154,20 +154,33 @@ function smoy_catcherTwo_page() {
                 $__name = $_product->data->name;
                 $__sku  =  $_product->data->code;
 
+                #TODO: продукт есть остатков нет... getProductStock вернет 201
+
                 $_product_stock = $moysklad->getProductStock( $_product->data->id);
 
                 if ($_product_stock->code == 200 ) {
                   $__qty = $_product_stock->data->quantity;
 
                   if ( smoy_set_qty($__sku, $__qty) ) {
-                    $message = "[CHAN] - " . $__sku . " " . $__name . " " . $__qty;
+                    $message = "[CHAN] - " . $__sku . " - " . $__name . ": " . $__qty;
                     watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
                   } else {
-                    $message = "[FAIL] - " . $__sku . " " . $__name . " " . $__qty;
+                    $message = "[FAIL] - " . $__sku . " - " . $__name . ": " . $__qty;
                     watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
                   }
                   
                 } // $_product_stock == 200
+                elseif ($_product_stock->code == 201) {
+                  $__qty = 0;
+
+                  if ( smoy_set_qty($__sku, $__qty) ) {
+                    $message = "[CHAN] - " . $__sku . " - " . $__name . ": " . $__qty;
+                    watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
+                  } else {
+                    $message = "[FAIL] - " . $__sku . " - " . $__name . ": " . $__qty;
+                    watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                  }
+                } // $_product_stock == 201
                 else { 
                 watchdog('moysklad_hook', "_product_stock " . json_encode($_product_stock), NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
                 }
