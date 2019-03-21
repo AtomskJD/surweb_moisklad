@@ -154,7 +154,7 @@ function smoy_catcherTwo_page() {
                 $__name = $_product->data->name;
                 $__sku  =  $_product->data->code;
 
-                #TODO: продукт есть остатков нет... getProductStock вернет 201
+                #DONE: продукт есть остатков нет... getProductStock вернет 201
 
                 $_product_stock = $moysklad->getProductStock( $_product->data->id);
 
@@ -235,6 +235,9 @@ function smoy_catcherTwo_page() {
             $_audit_request_stock = $moysklad->getProductStock($audit_request->data->id);
             $__qty = $_audit_request_stock->data->quantity;
             
+            #DONE: продукт есть остатков нет... getProductStock вернет 201
+
+
             if ( smoy_set_qty($__sku, $__qty) ) {
                   $message = "[CHAN] - " . $__sku . " " . $__name . " " . $__qty;
                   watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync");
