@@ -1,0 +1,19 @@
+name = moysklad commerce
+description = "Модуль интеграции моего склада и drupal commerce"
+package = SURWEB
+core = 7.x
+
+configure = admin/commerce/smoy-settings
+
+dependencies[] = commerce
+dependencies[] = rules
+
+; files[] = includes/rules.php
+; files[] = includes/moysclad.class.php
+; files[] = includes/test.page.php
+; files[] = includes/settings.page.php
+; files[] = includes/callbacks.page.php
+
+version = "7.x-3.0"
+project = SURWEB
+datestamp = 1549954027

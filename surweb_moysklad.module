@@ -1,0 +1,94 @@
+<?php 
+/**
+* smoy_ - prefix for all functions
+*/
+/**
+*  include page functions
+*/
+include_once('includes/test.page.php');
+include_once('includes/catchers.page.php');
+include_once('includes/settings.page.php');
+include_once('includes/hooks.page.php');
+include_once('includes/moysklad.class.php');
+include_once('includes/rules.inc.php');
+include_once('includes/queue.inc.php');
+
+/**
+*  Create access permissions
+*/
+
+function surweb_moysklad_permission() {
+  return array(
+    'surweb moysklad' => array(
+      'title' => t('Настраивать синхронизацию моего склада'),
+      'description' => 'Управлять настройками синхронизации моего склада',
+    ),
+  );
+}
+
+
+
+
+/**
+ * Implements hook menu
+ * Страницы модуля (Страница настройки и страница для запуска по cron)
+ */
+
+function surweb_moysklad_menu () {
+  $items = array();
+
+  // $items['admin/commerce/smoy-test'] = array(
+  //   'title' => 'Мойсклад тесты',
+  //   'description' => 'Мойсклад дебаг и тесты',
+  //   'page callback' => 'smoy_test_page',
+  //   'access arguments' => array('surweb moysklad'),
+  //   'type' => MENU_NORMAL_ITEM,
+  // );
+
+  $items['admin/commerce/smoy-settings'] = array(
+    'title' => 'Мойсклад настройки',
+    'description' => 'Настройки и информация по синхронизации с моимскладом',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('smoy_settings_page'),
+    'access arguments' => array('surweb moysklad'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/commerce/smoy-settings/default'] = array(
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'Мойсклад настройки соединения',
+    'weight' => 1,
+  );
+
+  $items['admin/commerce/smoy-settings/hooks'] = array(
+    'title' => 'Мойсклад настройки веб-хуков',
+    'description' => 'Настройки и информация по синхронизации с моимскладом',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('smoy_hooks_page'),
+    'access arguments' => array('surweb moysklad'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
+
+  
+  /* перевый тих хуков - для если можно получить быстрый отчет по остаткам*/
+  $items['smoy-sync'] = array(
+    'title' => 'Синхронизация',
+    'description' => 'Запуск от вебхука',
+    'page callback' => 'smoy_catcherOne_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  /* второй тип хуков - когда report/stock/byoperation не доступен */
+  $items['smoy-sync-type-2'] = array(
+    'title' => 'Синхронизация',
+    'description' => 'Запуск от вебхука',
+    'page callback' => 'smoy_catcherTwo_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+
+  return $items;
+}
+

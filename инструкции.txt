@@ -1,0 +1,83 @@
+развертывание бекапа (http://kolyaskin-dev2.surweb.ru)
+
+изменение .htaccess
+	закоментировать фрагмент описывающий переадресацию на https
+
+Установить и включить модуль surweb_moysklad v.3-x
+Включить модуль Database logging (dblog)
+
+Отключить правила управления складскими остатками
+/admin/config/workflow/rules/
+
+Stock: Decrease when completing the order process
+Stock: Increase when canceling the order process
+При удалении товара из заказа
+Изменение количества товара в заказе
+
+Импорт правил 
+1.
+	{ "rules_commerce_to_smoy_order" : {
+    	"LABEL" : "\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0437\u0430\u043a\u0430\u0437\u0430",
+    	"PLUGIN" : "reaction rule",
+    	"OWNER" : "rules",
+    	"TAGS" : [ "Commerce Checkout", "moysklad" ],
+    	"REQUIRES" : [ "surweb_moysklad", "commerce_checkout", "entity" ],
+    	"ON" : { "commerce_checkout_complete" : [], "commerce_order_insert" : [] },
+    	"DO" : [ { "smoy_sendOrder" : { "value" : [ "commerce-order" ] } } ]
+  	}
+	}
+
+2.
+	{ "rules_smoy_change_order" : {
+    	"LABEL" : "\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u0437\u0430\u043a\u0430\u0437\u0430",
+    	"PLUGIN" : "reaction rule",
+    	"OWNER" : "rules",
+    	"TAGS" : [ "moysklad" ],
+    	"REQUIRES" : [ "rules", "surweb_moysklad", "entity" ],
+    	"ON" : { "commerce_order_update" : [] },
+    	"DO" : [
+      	{ "drupal_message" : {
+          	"message" : "\u0417\u0430\u043a\u0430\u0437 \u0418\u0417\u041c\u0415\u041d\u0415\u041d. \u041e\u0442\u043f\u0440\u0430\u0432\u043a\u0430 \u0434\u0430\u043d\u043d\u044b\u0445 \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440",
+          	"type" : "warning"
+        	}
+      	},
+      	{ "smoy_updateOrder" : { "value" : [ "commerce-order" ] } }
+    	]
+  	}
+	}
+3.
+	{ "rules_smoy_order_delete" : {
+    	"LABEL" : "\u0423\u0434\u0430\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u043a\u0430\u0437\u0430",
+    	"PLUGIN" : "reaction rule",
+    	"OWNER" : "rules",
+    	"TAGS" : [ "moysklad" ],
+    	"REQUIRES" : [ "surweb_moysklad", "rules", "entity" ],
+    	"ON" : { "commerce_order_delete" : [] },
+    	"DO" : [
+      	{ "smoy_deleteOrder" : { "value" : [ "commerce-order" ] } },
+      	{ "drupal_message" : {
+          	"message" : "\u0423\u0414\u0410\u041b\u0415\u041d\u0418\u0415 \u0437\u0430\u043a\u0430\u0437\u0430. \u041e\u0442\u043f\u0440\u0430\u0432\u043a\u0430 \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440.",
+          	"type" : "warning"
+        	}
+      	}
+    	]
+  	}
+	}
+	
+4.
+{ "rules__li" : {
+    "LABEL" : "\u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 LI",
+    "PLUGIN" : "reaction rule",
+    "OWNER" : "rules",
+    "REQUIRES" : [ "surweb_moysklad", "entity" ],
+    "ON" : { "commerce_line_item_update" : [] },
+    "DO" : [ { "smoy_updateOrder" : { "value" : [ "commerce-line-item:order" ] } } ]
+  }
+}
+	
+Настроить модуль
+/admin/commerce/smoy-settings
+
+Настроить ВебХуки моего склада
+/admin/commerce/smoy-settings/hooks
+событие CUSTOMERORDER страница захвата /smoy-sync (адрес абсолютный)
