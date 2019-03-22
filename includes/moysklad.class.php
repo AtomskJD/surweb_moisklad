@@ -977,6 +977,9 @@ class Moysklad
     $_name = $_order->order_id;
     $description = $user_form_from_order . $missedProducts;
 
+    #TODO : #FIX getCustomerOrders возвращает результаты ПОИСКА они не всегда предсказуемы; 
+    # Нужно прочитать массив сравнить и выбрать ордер по ID
+
     $_moyOrder = $this->getCustomerOrders($_name);
     $__order_id = $_moyOrder->data[0]->id;
 
@@ -1084,6 +1087,8 @@ class Moysklad
     /* ==== */
     $_name = $_order->order_id;
 
+    #TODO : #FIX getCustomerOrders возвращает результаты ПОИСКА они не всегда предсказуемы; 
+    
     $_moyOrder = $this->getCustomerOrders($_name);
     $__order_id = $_moyOrder->data[0]->id;
 
