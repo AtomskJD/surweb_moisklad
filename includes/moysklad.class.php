@@ -977,11 +977,13 @@ class Moysklad
     $_name = $_order->order_id;
     $description = $user_form_from_order . $missedProducts;
 
-    #TODO : #FIX getCustomerOrders возвращает результаты ПОИСКА они не всегда предсказуемы; 
-    # Нужно прочитать массив сравнить и выбрать ордер по ID
-
     $_moyOrder = $this->getCustomerOrders($_name);
-    $__order_id = $_moyOrder->data[0]->id;
+    $__order_id = '';
+    foreach ($_moyOrder->data as $row) {
+      if ($_name == $row->name) {
+        $__order_id = $row->id;
+      }
+    }
 
     $path   = '/entity/customerorder';
     $query  = '/' . $__order_id;
@@ -1087,10 +1089,13 @@ class Moysklad
     /* ==== */
     $_name = $_order->order_id;
 
-    #TODO : #FIX getCustomerOrders возвращает результаты ПОИСКА они не всегда предсказуемы; 
-    
     $_moyOrder = $this->getCustomerOrders($_name);
-    $__order_id = $_moyOrder->data[0]->id;
+    $__order_id = '';
+    foreach ($_moyOrder->data as $row) {
+      if ($_name == $row->name) {
+        $__order_id = $row->id;
+      }
+    }
 
     $path   = '/entity/customerorder';
     $query  = '/' . $__order_id;
