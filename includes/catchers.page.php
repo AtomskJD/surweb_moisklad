@@ -14,7 +14,9 @@ function smoy_catcherOne_page() {
   $moysklad = new Moysklad();
 
   if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $content = file_get_contents("php://input");    
+    $content = file_get_contents("php://input");
+    $message = "[webhook] - " . $content;
+                  watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync");
 
     if ($json = json_decode($content)) {
       $operationURL = $json->events[0]->meta->href;
@@ -53,10 +55,10 @@ function smoy_catcherOne_page() {
             $__qty = $_audit_request_stock->data->quantity;
             
             if ( smoy_set_qty($__sku, $__qty) ) {
-                  $message = "[CHAN] - " . $__sku . " " . $__name . " " . $__qty;
+                  $message = "[AUDIT CHANGE] - " . $__sku . " " . $__name . " " . $__qty;
                   watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync");
             } else {
-              $message = "[FAIL] - " . $__sku . " " . $__name . " " . $__qty;
+              $message = "[AUDIT SIMILAR] - " . $__sku . " " . $__name . " " . $__qty;
               watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync");
             }
           }
@@ -85,10 +87,10 @@ function smoy_catcherOne_page() {
 
                 // Изменение остатков
                 if ( smoy_set_qty($__sku, $__qty) ) {
-                  $message = "[CHAN] - " . $__sku . " " . $__name . " " . $__qty;
+                  $message = "[REPORT CHANGE] - " . $__sku . " " . $__name . " " . $__qty;
                   watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync");
                 } else {
-                  $message = "[FAIL] - " . $__sku . " " . $__name . " " . $__qty;
+                  $message = "[REPORT SIMILAR] - " . $__sku . " " . $__name . " " . $__qty;
                   watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync");
                 }
 
@@ -127,7 +129,9 @@ function smoy_catcherTwo_page() {
   $moysklad = new Moysklad();
 
   if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $content = file_get_contents("php://input");    
+    $content = file_get_contents("php://input");
+    $message = "[webhook] - " . $content;
+              watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync");
 
     if ( $json = json_decode($content) ) {
       $operationURL = $json->events[0]->meta->href;
@@ -162,10 +166,10 @@ function smoy_catcherTwo_page() {
                   $__qty = $_product_stock->data->quantity;
 
                   if ( smoy_set_qty($__sku, $__qty) ) {
-                    $message = "[CHAN] - " . $__sku . " - " . $__name . ": " . $__qty;
+                    $message = "[200 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
                     watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
                   } else {
-                    $message = "[FAIL] - " . $__sku . " - " . $__name . ": " . $__qty;
+                    $message = "[200 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
                     watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
                   }
                   
@@ -174,10 +178,10 @@ function smoy_catcherTwo_page() {
                   $__qty = 0;
 
                   if ( smoy_set_qty($__sku, $__qty) ) {
-                    $message = "[CHAN] - " . $__sku . " - " . $__name . ": " . $__qty;
+                    $message = "[201 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
                     watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
                   } else {
-                    $message = "[FAIL] - " . $__sku . " - " . $__name . ": " . $__qty;
+                    $message = "[201 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
                     watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
                   }
                 } // $_product_stock == 201
@@ -235,9 +239,6 @@ function smoy_catcherTwo_page() {
             $_audit_request_stock = $moysklad->getProductStock($audit_request->data->id);
             $__qty = $_audit_request_stock->data->quantity;
             
-            #DONE: продукт есть остатков нет... getProductStock вернет 201
-
-
             if ( smoy_set_qty($__sku, $__qty) ) {
                   $message = "[CHAN] - " . $__sku . " " . $__name . " " . $__qty;
                   watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync");
