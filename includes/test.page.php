@@ -77,9 +77,9 @@ function smoy_test_page() {
         . base64_encode(variable_get('moysklad_login')
         .":"
         . variable_get('moysklad_pass')), 'status', FALSE);*/
-
+/*
   $line_item = 50268;
-  $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
+  $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);*/
   // $line_item_wrapper->commerce_product = 200.0;
   // kpr($line_item_wrapper->commerce_product->value());
   // $product = commerce_product_load(23);
@@ -98,7 +98,7 @@ function smoy_test_page() {
    ** title
    ** quantity
    */
-  $product_from_LI  = "<strong>Здачения через commerce_line_item (line_item = 50268): </strong><br>";
+/*  $product_from_LI  = "<strong>Здачения через commerce_line_item (line_item = 50268): </strong><br>";
   $product_from_LI .= "LI_label: " 
     . ($line_item_wrapper->line_item_label->value()) . " ";
   $product_from_LI .= "quantity: " 
@@ -106,21 +106,24 @@ function smoy_test_page() {
   $product_from_LI .= "sku: " 
     . ($line_item_wrapper->commerce_product->sku->value()) . " ";
   $product_from_LI .= "title: " 
-    . ($line_item_wrapper->commerce_product->title->value());
+    . ($line_item_wrapper->commerce_product->title->value());*/
 
 
   /**
    * order
    ** 
    */
-  $order_id = 36600;
+  $order_id = 41685;
   $order = commerce_order_load($order_id);
   $wrapper = entity_metadata_wrapper('commerce_order', $order);
 
-  dpm($wrapper->status->value(), "STATUS");
-  dpm(smoy_commerce_to_moysklad_state_conv('canceled'), "STATUS CONV");
-  dpm(smoy_commerce_to_moysklad_state_conv('Отправлен. РКО'), "STATUS CONV");
-  dpm(smoy_commerce_to_moysklad_state_conv('checkout_complete'), "STATUS CONV");
+  if ($wrapper->commerce_discounts->value()){
+    dpm($wrapper->commerce_discounts[0]->commerce_discount_offer->commerce_percentage->value(), "INFO");
+    dpm($wrapper->commerce_discounts[0]->name->value(), "INFO");
+    dpm($wrapper->commerce_discounts[0]->component_title->value(), "INFO");
+    } else {
+      dpm ("NO DISCOUNTS", "INFO");
+  }
 
   // kpr($moysklad->getStates('customerorder', smoy_commerce_to_moysklad_state_conv('checkout_complete')));
   // foreach ($wrapper->commerce_line_items as $key => $value) {
@@ -155,11 +158,11 @@ function smoy_test_page() {
   /**
    * Вариант номер 3 из переменной ордер
    */
-  $order = commerce_order_load($order_id);
-  $positions = array(
-    "quantity" => 2.0,
-    "price" => 2000,
-  );
+  // $order = commerce_order_load($order_id);
+  // $positions = array(
+  //   "quantity" => 2.0,
+  //   "price" => 2000,
+  // );
 
 
   // kpr($moysklad->setCustomerOrder($order));
@@ -169,63 +172,6 @@ function smoy_test_page() {
 
   // kpr($wrapper->commerce_customer_billing->field_fio->value());
   // $address = $wrapper->commerce_customer_billing->commerce_customer_address->value();
-  getAllOrders();
-  // dpm (testOrder());
-  $queue_add    = DrupalQueue::get('surweb_moysklad_add_oreder');
-  $queue_add->createQueue();
-  $queue_add->createItem($order);
-  // dpm($queue_add->numberOfItems());
-  // watchdog('test', 'message', array(), WATCHDOG_ERROR, 'link');
-
-  // smoy_getQueues();
-  // $audit  = $moysklad->getCustomerOrderAudit( "f09604b6-3b2a-11e9-9109-f8fc001606a6", 5 );
-
-// $audit->data[0]->diff->positions[0]->oldValue->assortment->meta->href;
-  // kpr($audit->meta);
-    $oldValues = array();
-    $newValues = array();
-  // foreach ($audit->data as $row) {
-  //   // dpm($row->diff->positions);
-
-  //   foreach ($row->diff->positions as $position) {
-  //     // dpm($position);
-  //     if ( isset($position->oldValue) ) {
-  //       $oldValues[$position->oldValue->assortment->meta->href] = $position->oldValue->assortment->meta->href;
-  //     }
-  //     if ( isset($position->newValue) ) {
-  //       $newValues[$position->newValue->assortment->meta->href] = $position->newValue->assortment->meta->href;
-  //     }
-  //   }
-  // }
-
-  // OLD values "deleted"
-  // dpm($oldValues);
-  // NEW values "added"
-  // dpm($newValues);
-
-  // foreach ($oldValues as $url) {
-  //   $audit_request = $moysklad->getRequestData( $url );
-  //   dpm($audit_request->data->id, "ID_");
-  //   dpm($audit_request->data->code, "SKU");
-  //   $_stock = $moysklad->getProductStock($audit_request->data->id);
-  //   dpm($_stock->data->stock, "stock");
-  // }
-
-
-    dpm ($oo = $moysklad->getCustomerOrders(39222), '->getCustomerOrders(39221)');
-
-    if (isset($oo->data[0]->demands)) {
-      $demands = $oo->data[0]->demands;
-      foreach ($demands as $demand) {
-        $_demandResp = $moysklad->getRequestData($demand->meta->href);
-        dpm($_demandResp);
-        if ( $_demandResp->code == 200 ) {
-          dpm($moysklad->delDemand( $_demandResp->data->id ));
-        }
-      }
-    }
-    // dpm($moysklad->delDemand( $oo->data[0]->demands ));
-    // dpm(isset($oo->demands));
 
 
 

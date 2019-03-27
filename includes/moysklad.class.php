@@ -786,6 +786,12 @@ class Moysklad
     // }
 
     $order_wrapper = entity_metadata_wrapper('commerce_order', $_order);
+    
+    $_discount_value = 0;
+    if ($order_wrapper->commerce_discounts->value()){
+      $order_discounts = "\n" . $order_wrapper->commerce_discounts[0]->component_title->value() . "(". $order_wrapper->commerce_discounts[0]->name->value() .")";
+      $_discount_value = $order_wrapper->commerce_discounts[0]->commerce_discount_offer->commerce_percentage->value();
+    }
 
     /* USERFORM in order */
     $user_form_from_order = "#" .$_order->order_id. "\n";
@@ -818,11 +824,13 @@ class Moysklad
       if ($_product->code == 201) {
         $missedProducts .= "\t * " . $sku ." ". $title ." - ". $quantity . "\n";
       }
+      #TODO : Add discount for creating order
       if ($_product->code == 200) {
         $position = array(
           "quantity"    => (int)$quantity,
           "reserve"     => (int)$quantity,
           "price"       => $_product->data->salePrices[0]->value,
+          "discount"    => (int)$_discount_value,
           "assortment"  => array(
             "meta" => $_product->meta,
           ),
@@ -843,7 +851,7 @@ class Moysklad
     $_metaOrganization = $this->getOrganization()->meta;
     $_metaAgent = $this->getCounterparty( variable_get('moysklad_counterparty', '') )->meta;
     $_metaStore = $this->getStore( variable_get('moysklad_store', '') )->meta;
-    $description = $user_form_from_order . $missedProducts;
+    $description = $user_form_from_order . $missedProducts . $order_discounts;
 
     $path   = '/entity/customerorder';
 
@@ -914,6 +922,11 @@ class Moysklad
 
     $order_wrapper = entity_metadata_wrapper('commerce_order', $_order);
     $order_status = $order_wrapper->status->value();
+    $_discount_value = 0;
+    if ($order_wrapper->commerce_discounts->value()){
+      $order_discounts = "\n" . $order_wrapper->commerce_discounts[0]->component_title->value() . "(". $order_wrapper->commerce_discounts[0]->name->value() .")";
+      $_discount_value = $order_wrapper->commerce_discounts[0]->commerce_discount_offer->commerce_percentage->value();
+    }
 
     /* USERFORM in order */
     $user_form_from_order = "#" .$_order->order_id. "\n";
@@ -957,6 +970,7 @@ class Moysklad
           "quantity"    => (int)$quantity,
           "reserve"     => (int)$reserve,
           "price"       => $_product->data->salePrices[0]->value,
+          "discount"    => (int)$_discount_value,
           "assortment"  => array(
             "meta" => $_product->meta,
           ),
@@ -975,7 +989,7 @@ class Moysklad
 
     /* ==== */
     $_name = $_order->order_id;
-    $description = $user_form_from_order . $missedProducts;
+    $description = $user_form_from_order . $missedProducts . $order_discounts;
 
     $_moyOrder = $this->getCustomerOrders($_name);
     $__order_id = '';
