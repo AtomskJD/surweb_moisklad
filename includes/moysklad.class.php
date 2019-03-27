@@ -814,29 +814,32 @@ class Moysklad
     $_positions = array();
     $missedProducts = '';
     for ($i=0; $i < count($order_wrapper->commerce_line_items->value()); $i++) {
-      $LI = $order_wrapper->commerce_line_items[$i];
-      $quantity = $LI->quantity->value();
-      $sku      = $LI->commerce_product->sku->value();
-      $title    = $LI->commerce_product->title->value();
-      
-      $_product = $this->getProduct($sku);
+      #FIX: в лайнитемах могут быть еще и скидки
+      if ($LI->type->value() == "product") {
+        $LI = $order_wrapper->commerce_line_items[$i];
+        $quantity = $LI->quantity->value();
+        $sku      = $LI->commerce_product->sku->value();
+        $title    = $LI->commerce_product->title->value();
+        
+        $_product = $this->getProduct($sku);
 
-      if ($_product->code == 201) {
-        $missedProducts .= "\t * " . $sku ." ". $title ." - ". $quantity . "\n";
-      }
-      #TODO : Add discount for creating order
-      if ($_product->code == 200) {
-        $position = array(
-          "quantity"    => (int)$quantity,
-          "reserve"     => (int)$quantity,
-          "price"       => $_product->data->salePrices[0]->value,
-          "discount"    => (int)$_discount_value,
-          "assortment"  => array(
-            "meta" => $_product->meta,
-          ),
-        );
+        if ($_product->code == 201) {
+          $missedProducts .= "\t * " . $sku ." ". $title ." - ". $quantity . "\n";
+        }
+        #TODO : Add discount for creating order
+        if ($_product->code == 200) {
+          $position = array(
+            "quantity"    => (int)$quantity,
+            "reserve"     => (int)$quantity,
+            "price"       => $_product->data->salePrices[0]->value,
+            "discount"    => (int)$_discount_value,
+            "assortment"  => array(
+              "meta" => $_product->meta,
+            ),
+          );
 
-        $_positions[] = $position;
+          $_positions[] = $position;
+        }
       }
 
     }
@@ -951,32 +954,35 @@ class Moysklad
     $missedProducts = '';
     for ($i=0; $i < count($order_wrapper->commerce_line_items->value()); $i++) {
       $LI = $order_wrapper->commerce_line_items[$i];
-      $quantity = $LI->quantity->value();
-      $reserve  = $LI->quantity->value();
-      $sku      = $LI->commerce_product->sku->value();
-      $title    = $LI->commerce_product->title->value();
+      #FIX: в лайнитемах могут быть еще и скидки
+      if ($LI->type->value() == "product") {
+        $quantity = $LI->quantity->value();
+        $reserve  = $LI->quantity->value();
+        $sku      = $LI->commerce_product->sku->value();
+        $title    = $LI->commerce_product->title->value();
 
-      if ($order_status == 'canceled') {
-        $reserve  = 0;
-      }
-      
-      $_product = $this->getProduct($sku);
+        if ($order_status == 'canceled') {
+          $reserve  = 0;
+        }
+        
+        $_product = $this->getProduct($sku);
 
-      if ($_product->code == 201) {
-        $missedProducts .= "\t * " . $sku ." ". $title ." - ". $quantity . "\n";
-      }
-      if ($_product->code == 200) {
-        $position = array(
-          "quantity"    => (int)$quantity,
-          "reserve"     => (int)$reserve,
-          "price"       => $_product->data->salePrices[0]->value,
-          "discount"    => (int)$_discount_value,
-          "assortment"  => array(
-            "meta" => $_product->meta,
-          ),
-        );
+        if ($_product->code == 201) {
+          $missedProducts .= "\t * " . $sku ." ". $title ." - ". $quantity . "\n";
+        }
+        if ($_product->code == 200) {
+          $position = array(
+            "quantity"    => (int)$quantity,
+            "reserve"     => (int)$reserve,
+            "price"       => $_product->data->salePrices[0]->value,
+            "discount"    => (int)$_discount_value,
+            "assortment"  => array(
+              "meta" => $_product->meta,
+            ),
+          );
 
-        $_positions[] = $position;
+          $_positions[] = $position;
+        }
       }
 
     }

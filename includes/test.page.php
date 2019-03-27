@@ -113,17 +113,46 @@ function smoy_test_page() {
    * order
    ** 
    */
-  $order_id = 41685;
+  $order_id = 41685 ;
+  $order_id = 41697 ;
   $order = commerce_order_load($order_id);
   $wrapper = entity_metadata_wrapper('commerce_order', $order);
 
+  $_discount_value = 0;
   if ($wrapper->commerce_discounts->value()){
     dpm($wrapper->commerce_discounts[0]->commerce_discount_offer->commerce_percentage->value(), "INFO");
     dpm($wrapper->commerce_discounts[0]->name->value(), "INFO");
     dpm($wrapper->commerce_discounts[0]->component_title->value(), "INFO");
+    $_discount_value = $wrapper->commerce_discounts[0]->commerce_discount_offer->commerce_percentage->value();
     } else {
       dpm ("NO DISCOUNTS", "INFO");
   }
+
+    for ($i=0; $i < count($wrapper->commerce_line_items->value()); $i++) {
+      $LI = $wrapper->commerce_line_items[$i];
+      dpm($LI->type->value());
+      if ($LI->type->value() == "product") {
+        # code...
+        $quantity = $LI->quantity->value();
+        $reserve  = $LI->quantity->value();
+        $sku      = $LI->commerce_product->sku->value();
+        $title    = $LI->commerce_product->title->value();
+
+        
+        $position = array(
+          "title"       => $title,
+          "sku"         => $sku,
+          "quantity"    => (int)$quantity,
+          "reserve"     => (int)$reserve,
+          "discount"    => (int)$_discount_value,
+        );
+
+        $_positions[] = $position;
+      }
+
+    }
+
+    dpm($_positions);
 
   // kpr($moysklad->getStates('customerorder', smoy_commerce_to_moysklad_state_conv('checkout_complete')));
   // foreach ($wrapper->commerce_line_items as $key => $value) {
