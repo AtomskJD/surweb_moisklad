@@ -113,13 +113,14 @@ function smoy_test_page() {
    * order
    ** 
    */
-  $order_id = 41685 ;
-  $order_id = 41697 ;
+  $order_id =  41702 ;
+  // $order_id = 41697 ;
   $order = commerce_order_load($order_id);
   $wrapper = entity_metadata_wrapper('commerce_order', $order);
 
   $_discount_value = 0;
   if ($wrapper->commerce_discounts->value()){
+    dpm($wrapper->commerce_customer_billing->field_disc->value(), "DISCOUNTS");
     dpm($wrapper->commerce_discounts[0]->commerce_discount_offer->commerce_percentage->value(), "INFO");
     dpm($wrapper->commerce_discounts[0]->name->value(), "INFO");
     dpm($wrapper->commerce_discounts[0]->component_title->value(), "INFO");

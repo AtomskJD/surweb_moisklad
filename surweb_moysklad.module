@@ -37,13 +37,13 @@ function surweb_moysklad_permission() {
 function surweb_moysklad_menu () {
   $items = array();
 
-  // $items['admin/commerce/smoy-test'] = array(
-  //   'title' => 'Мойсклад тесты',
-  //   'description' => 'Мойсклад дебаг и тесты',
-  //   'page callback' => 'smoy_test_page',
-  //   'access arguments' => array('surweb moysklad'),
-  //   'type' => MENU_NORMAL_ITEM,
-  // );
+  $items['admin/commerce/smoy-test'] = array(
+    'title' => 'Мойсклад тесты',
+    'description' => 'Мойсклад дебаг и тесты',
+    'page callback' => 'smoy_test_page',
+    'access arguments' => array('surweb moysklad'),
+    'type' => MENU_NORMAL_ITEM,
+  );
 
   $items['admin/commerce/smoy-settings'] = array(
     'title' => 'Мойсклад настройки',

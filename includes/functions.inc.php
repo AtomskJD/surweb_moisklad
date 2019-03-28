@@ -137,6 +137,15 @@ function smoy_getQueues() {
   // return "<strong>Осталось элементов в очереди: </strong>"  .  $queue->numberOfItems();
 }
 
+
+
+
+/**
+ * Конвертация имен статусов коммерца в имена моего склада
+ * Статус далее отправляется на мой склад
+ * @param  [type] $_commerce_state_name_value [description]
+ * @return [type]                             [description]
+ */
 function smoy_commerce_to_moysklad_state_conv ( $_commerce_state_name_value ) {
   switch ($_commerce_state_name_value) {
     case 'canceled':

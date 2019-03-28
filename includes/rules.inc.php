@@ -6,6 +6,10 @@ function smoy_info () {
   kpr(phpinfo());
 }
 
+
+
+
+
 /**
  * Implement hook_rules_action_info()
  * Declare any meta data about actions for Rules
@@ -77,11 +81,11 @@ function surweb_moysklad_rules_action_info() {
           'type' => 'user',
           'label' => t('User to say hello to'),
         ),
-      'message' => array(
-          'type' => 'text',
-          'label' => t('Message'),
-          'description' => t("The message body."),
-        ),
+        'message' => array(
+            'type' => 'text',
+            'label' => t('Message'),
+            'description' => t("The message body."),
+          ),
       ),
     ),
 
@@ -89,6 +93,34 @@ function surweb_moysklad_rules_action_info() {
  
   return $actions;
 }
+
+
+
+
+
+/**
+ * Implements of hook_rules_condition_info().
+ */
+function surweb_moysklad_rules_condition_info() {
+  $conditions = array(
+    'smoy_checkDiscount' => array(
+      'base' => 'smoy_rules_conditions_checkDiscount',
+        'label' =>  'Проверить скидку',
+        'group' => "surweb",
+        'parameter' => array(
+          'value' => array('type' => 'unknown', 'label' => t('order')),
+          'value2' => array('type' => 'text', 'label' => t('Value to debug'),'description' => t("The message body.")),
+      ),
+    ),
+  );
+
+
+  return $conditions;
+}
+
+
+
+
 
 
 
@@ -162,6 +194,24 @@ function smoy_rules_action_delete_order( $order ) {
   drupal_set_message($actionOrder->message, 'message', FALSE);
 
 }
+
+
+
+
+function smoy_rules_conditions_checkDiscount( $_order, $_discount ) {
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $_order);
+  $order_discount_name = $order_wrapper->commerce_customer_billing->field_disc->value();
+
+  if ($order_discount_name == $_discount) {
+    return true;
+  } else {
+    return false;
+  }
+
+  return false;
+}
+
+
 
 
 

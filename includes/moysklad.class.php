@@ -815,8 +815,8 @@ class Moysklad
     $missedProducts = '';
     for ($i=0; $i < count($order_wrapper->commerce_line_items->value()); $i++) {
       #FIX: в лайнитемах могут быть еще и скидки
+      $LI = $order_wrapper->commerce_line_items[$i];
       if ($LI->type->value() == "product") {
-        $LI = $order_wrapper->commerce_line_items[$i];
         $quantity = $LI->quantity->value();
         $sku      = $LI->commerce_product->sku->value();
         $title    = $LI->commerce_product->title->value();
@@ -953,8 +953,8 @@ class Moysklad
     $_positions = array();
     $missedProducts = '';
     for ($i=0; $i < count($order_wrapper->commerce_line_items->value()); $i++) {
-      $LI = $order_wrapper->commerce_line_items[$i];
       #FIX: в лайнитемах могут быть еще и скидки
+      $LI = $order_wrapper->commerce_line_items[$i];
       if ($LI->type->value() == "product") {
         $quantity = $LI->quantity->value();
         $reserve  = $LI->quantity->value();
