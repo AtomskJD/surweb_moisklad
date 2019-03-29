@@ -153,7 +153,7 @@ function smoy_test_page() {
 
     }
 
-    dpm($_positions);
+    // dpm($_positions);
 
   // kpr($moysklad->getStates('customerorder', smoy_commerce_to_moysklad_state_conv('checkout_complete')));
   // foreach ($wrapper->commerce_line_items as $key => $value) {
@@ -180,7 +180,7 @@ function smoy_test_page() {
       $body = json_encode($bb);
       $headers = array('Content-Type:application/json');
 
-      dpm($_SERVER);
+      // dpm($_SERVER);
 
     // $process = curl_init("https://webhook.site/74e0df5e-67be-418e-9c56-155a4d7390de");
     $process = curl_init("http://kolyaskin-dev.surweb.ru/smoy-sync");
@@ -195,15 +195,18 @@ function smoy_test_page() {
       
     curl_close($process);
 
-      $queue    = DrupalQueue ::get('surweb_moysklad_check_orders');
-      $queue->createQueue();
-      $queue->createItem($bb);
+        $queue    = DrupalQueue::get('surweb_moysklad_check_orders');
+        $queue->createQueue();
+        $itemsCount = $queue->numberOfItems();
 
-      dpm($queue->claimItem());
-      
-      $numb = $queue->numberOfItems();
+        for ($i=0; $i < $itemsCount; $i++) { 
+          $item = $queue->claimItem();
+          $queue->releaseItem($item);
+          dpm($item);
+          // dpm($item->item_id);
+        }
 
-      drupal_set_message("тестовый прогон " .$numb, 'status', FALSE);
+      drupal_set_message("тестовый прогон " .$itemsCount, 'status', FALSE);
 
       // drupal_set_message("Отправлена в очередь", 'message', true);
 

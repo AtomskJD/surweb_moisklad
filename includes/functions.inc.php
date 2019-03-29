@@ -211,6 +211,7 @@ function smoy_order_status_is_complete ( $_order_status ) {
 
 function smoy_create_quasi_hook ( $meta, $action) {
   $hook = array(
+    "quasi_hook" => true,
     "events" => array(
       array("meta" => $meta, "action" => $action ),
     )
@@ -222,4 +223,20 @@ function smoy_create_quasi_hook ( $meta, $action) {
 
 function smoy_isSSL() { 
   return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443; 
+}
+
+
+
+function smoy_queue_check_orders__item_remove( $search ) {
+  $queue    = DrupalQueue ::get('surweb_moysklad_check_orders');
+  $queue->createQueue();
+  $itemsCount = $queue->numberOfItems();
+
+  for ($i=0; $i < $itemsCount; $i++) { 
+    
+  }
+
+  dpm($queue->claimItem());
+
+
 }

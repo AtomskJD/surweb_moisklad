@@ -20,6 +20,14 @@ function smoy_catcherOne_page() {
 
     if ($json = json_decode($content)) {
       $operationURL = $json->events[0]->meta->href;
+
+    /**
+     * кодга приходит хук или квази-хук проверим очередь и если есть ссылка
+     * на такойже объект то одаляем ее
+     */
+    
+      smoy_queue_check_orders__item_remove($operationURL);  
+
       $document = $moysklad->getRequestData($operationURL);
       
       if ($document->code == 200) {
