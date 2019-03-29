@@ -146,6 +146,13 @@ function smoy_rules_action_send_order( $order ) {
   
   if ($actonOrder->code == 200) {
     drupal_set_message($actionOrder->message, 'status', FALSE);
+
+    #DONE : На случай если хук с моего склада не вернется, передаем объект 
+    #       похожий на хук в очередь для обработки уже по крону...
+    $queue = DrupalQueue ::get('surweb_moysklad_check_orders');
+    $queue->createQueue();
+    $queue->createItem(smoy_create_quasi_hook($actonOrder->meta, "CREATE"));
+
   } elseif (
       $actonOrder->code == 404 || // Запрошенный ресурс не существует
       $actonOrder->code == 429 || // Превышен лимит количества запросов
@@ -170,6 +177,13 @@ function smoy_rules_action_update_order( $order ) {
 
   if ($actonOrder->code == 200) {
     drupal_set_message($actionOrder->message, 'status', FALSE);
+
+    #DONE : На случай если хук с моего склада не вернется, передаем объект 
+    #       похожий на хук в очередь для обработки уже по крону...
+    $queue = DrupalQueue ::get('surweb_moysklad_check_orders');
+    $queue->createQueue();
+    $queue->createItem(smoy_create_quasi_hook($actonOrder->meta, "UPDATE"));
+
   } elseif (
       $actonOrder->code == 404 || // Запрошенный ресурс не существует
       $actonOrder->code == 429 || // Превышен лимит количества запросов

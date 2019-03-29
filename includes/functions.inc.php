@@ -203,3 +203,23 @@ function smoy_order_status_is_complete ( $_order_status ) {
     return true;
   } else return false;
 }
+
+
+
+
+
+
+function smoy_create_quasi_hook ( $meta, $action) {
+  $hook = array(
+    "events" => array(
+      array("meta" => $meta, "action" => $action ),
+    )
+  );
+
+  return $hook;
+}
+
+
+function smoy_isSSL() { 
+  return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443; 
+}

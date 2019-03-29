@@ -167,41 +167,45 @@ function smoy_test_page() {
     // dpm ($LI->commerce_product->sku->value());
     // dpm ($LI->commerce_product->title->value());
   }
-  // kpr($wrapper->commerce_customer_billing->value());
-  $user_form_from_order = "<strong>Здачения через commerce_order (order_id = 35118): </strong><br>";
-  $user_form_from_order .= "field_phone: " 
-  . $wrapper->commerce_customer_billing->field_phone->value() . "; ";
-  $user_form_from_order .= "field_city: " 
-  . $wrapper->commerce_customer_billing->field_city->value() . "; ";
-  $user_form_from_order .= "field_street: " 
-  . $wrapper->commerce_customer_billing->field_street->value() . "; ";
-  $user_form_from_order .= "field_comment: " 
-  . $wrapper->commerce_customer_billing->field_comment->value()['value'] . "; ";
-  $user_form_from_order .= "field_fio: " 
-  . $wrapper->commerce_customer_billing->field_fio->value() . "; ";
-  $user_form_from_order .= "field_ship: " 
-  . $wrapper->commerce_customer_billing->field_ship->value() . "; ";
-  $user_form_from_order .= "field_postindex: " 
-  . $wrapper->commerce_customer_billing->field_postindex->value() . "; ";
-  
+      // kpr($wrapper->commerce_customer_billing->value());
+    $meta = array(
+      "type" => "customerorder",
+      "href" => "https://online.moysklad.ru/api/remap/1.1/entity/customerorder/eee5d6fb-5156-11e9-9107-504800044069",
+    );
+      $bb = array(
+        "events" => array(
+          array("meta" => $meta, "action" => "UPDATE"),
+        )
+      );
+      $body = json_encode($bb);
+      $headers = array('Content-Type:application/json');
 
-  /**
-   * Вариант номер 3 из переменной ордер
-   */
-  // $order = commerce_order_load($order_id);
-  // $positions = array(
-  //   "quantity" => 2.0,
-  //   "price" => 2000,
-  // );
+      dpm($_SERVER);
 
+    // $process = curl_init("https://webhook.site/74e0df5e-67be-418e-9c56-155a4d7390de");
+    $process = curl_init("http://kolyaskin-dev.surweb.ru/smoy-sync");
+      curl_setopt($process, CURLOPT_HTTPHEADER, $headers);
+      curl_setopt($process, CURLOPT_HEADER, 0);
+      curl_setopt($process, CURLOPT_TIMEOUT, 30);
+      curl_setopt($process, CURLOPT_POST, 1);
+      curl_setopt($process, CURLOPT_POSTFIELDS, $body);
+      curl_setopt($process, CURLOPT_RETURNTRANSFER, FALSE);
+      $return = curl_exec($process);
+      $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
+      
+    curl_close($process);
 
-  // kpr($moysklad->setCustomerOrder($order));
+      $queue    = DrupalQueue ::get('surweb_moysklad_check_orders');
+      $queue->createQueue();
+      $queue->createItem($bb);
 
-  // $order = entity_metadata_wrapper('commerce_order', $order_id);
-  // kpr($order->commerce_line_items[0]->commerce_product->title->value());
+      dpm($queue->claimItem());
+      
+      $numb = $queue->numberOfItems();
 
-  // kpr($wrapper->commerce_customer_billing->field_fio->value());
-  // $address = $wrapper->commerce_customer_billing->commerce_customer_address->value();
+      drupal_set_message("тестовый прогон " .$numb, 'status', FALSE);
+
+      // drupal_set_message("Отправлена в очередь", 'message', true);
 
 
 
@@ -210,10 +214,7 @@ function smoy_test_page() {
     . '<pre>'
     . variable_get('moysklad_login', 'user@name') . "\n"
     . variable_get('moysklad_pass', '') . "\n"
-    . $check->message . " \n"
-    . $product_from_LI . " \n"
-    . $user_form_from_order . " \n"
-    // . json_encode($_debugConnection, JSON_PRETTY_PRINT). " \n"
+
     . '<pre>'
 
   );
