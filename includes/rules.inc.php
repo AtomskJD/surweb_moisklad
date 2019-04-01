@@ -31,7 +31,7 @@ function surweb_moysklad_rules_action_info() {
         'label' =>  'Отправить новый заказ',
         'group' => "surweb",
         'parameter' => array(
-          'value' => array('type' => 'unknown', 'label' => t('Value to debug')),
+          'value' => array('type' => 'unknown', 'label' =>  'Пременная заказа'),
       ),
     ),
 
@@ -42,26 +42,40 @@ function surweb_moysklad_rules_action_info() {
         'label' =>  'Изменить существующий заказ',
         'group' => "surweb",
         'parameter' => array(
-          'value' => array('type' => 'unknown', 'label' => t('Value to debug')),
+          'value' => array('type' => 'unknown', 'label' => 'Пременная заказа'),
       ),
     ),
 
+    
     // УДАЛЕНИЕ ЗАКАЗА
     'smoy_deleteOrder' => array(
       'base' => 'smoy_rules_action_delete_order',
         'label' =>  'Удалить существующий заказ',
         'group' => "surweb",
         'parameter' => array(
-          'value' => array('type' => 'unknown', 'label' => t('Value to debug')),
+          'value' => array('type' => 'unknown', 'label' => 'Переменная заказа'),
       ),
     ),
 
+    // Дебаг принятой переменной DPM
     'smoy_debug' => array(
       'base' => 'smoy_rules_debug_action',
       'label' =>  'Дебажить',
       'group' => "surweb",
       'parameter' => array(
         'value' => array('type' => 'unknown', 'label' => t('Value to debug')),
+      ),
+    ),
+
+
+
+    // Принудительное применение правил ценообразования
+    'smoy_refreshOrder' => array(
+      'base' => 'smoy_rules_action_refresh_order',
+        'label' =>  'Применить правила ценообразования',
+        'group' => "surweb",
+        'parameter' => array(
+          'value' => array('type' => 'unknown', 'label' => 'Переменная заказа'),
       ),
     ),
 
@@ -261,4 +275,13 @@ function demo_rules_actions_hello_world() {
 function demo_rules_actions_hello_user($account, $text) {
   drupal_set_message(t('Hello @username', array('@username' => $account->name)));
   drupal_set_message($text);
+}
+
+
+
+
+
+function smoy_rules_action_refresh_order ( $_order ) {
+  commerce_cart_order_refresh($_order);
+  return true;
 }

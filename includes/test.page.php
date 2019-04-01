@@ -113,9 +113,10 @@ function smoy_test_page() {
    * order
    ** 
    */
-  $order_id =  41702 ;
+  $order_id =  41716 ;
   // $order_id = 41697 ;
   $order = commerce_order_load($order_id);
+  
   $wrapper = entity_metadata_wrapper('commerce_order', $order);
 
   $_discount_value = 0;
@@ -182,29 +183,28 @@ function smoy_test_page() {
 
       // dpm($_SERVER);
 
-    // $process = curl_init("https://webhook.site/74e0df5e-67be-418e-9c56-155a4d7390de");
-    $process = curl_init("http://kolyaskin-dev.surweb.ru/smoy-sync");
-      curl_setopt($process, CURLOPT_HTTPHEADER, $headers);
-      curl_setopt($process, CURLOPT_HEADER, 0);
-      curl_setopt($process, CURLOPT_TIMEOUT, 30);
-      curl_setopt($process, CURLOPT_POST, 1);
-      curl_setopt($process, CURLOPT_POSTFIELDS, $body);
-      curl_setopt($process, CURLOPT_RETURNTRANSFER, FALSE);
-      $return = curl_exec($process);
-      $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
+      commerce_cart_order_refresh($order);
+
+    // // $process = curl_init("https://webhook.site/74e0df5e-67be-418e-9c56-155a4d7390de");
+    // $process = curl_init("http://kolyaskin-dev.surweb.ru/smoy-sync");
+    //   curl_setopt($process, CURLOPT_HTTPHEADER, $headers);
+    //   curl_setopt($process, CURLOPT_HEADER, 0);
+    //   curl_setopt($process, CURLOPT_TIMEOUT, 30);
+    //   curl_setopt($process, CURLOPT_POST, 1);
+    //   curl_setopt($process, CURLOPT_POSTFIELDS, $body);
+    //   curl_setopt($process, CURLOPT_RETURNTRANSFER, FALSE);
+    //   $return = curl_exec($process);
+    //   $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-    curl_close($process);
+    // curl_close($process);
 
-        $queue    = DrupalQueue::get('surweb_moysklad_check_orders');
-        $queue->createQueue();
-        $itemsCount = $queue->numberOfItems();
+    //     $queue    = DrupalQueue::get('surweb_moysklad_check_orders');
+    //     $queue->createQueue();
+    //     $itemsCount = $queue->numberOfItems();
+        
+        $iis = _smoy_find_in_queue("https://online.moysklad.ru/api/remap/1.1/entity/customerorder/db9e523c-5440-11e9-9107-504800131f12");
+        dpm($iis);
 
-        for ($i=0; $i < $itemsCount; $i++) { 
-          $item = $queue->claimItem();
-          $queue->releaseItem($item);
-          dpm($item);
-          // dpm($item->item_id);
-        }
 
       drupal_set_message("тестовый прогон " .$itemsCount, 'status', FALSE);
 

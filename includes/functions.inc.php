@@ -240,3 +240,44 @@ function smoy_queue_check_orders__item_remove( $search ) {
 
 
 }
+
+
+
+
+
+function _smoy_queue_items( $queue_name = 'surweb_moysklad_check_orders') {
+
+    $items = db_query('SELECT data, item_id, name FROM {queue} q WHERE name = :name ORDER BY created, item_id ASC', array(':name' => $queue_name ))->fetchAll();
+
+    if ($items) {
+      return $items;
+    }
+
+      return FALSE;
+}
+
+
+
+function _smoy_find_in_queue ( $_href ) {
+  if ($_items = _smoy_queue_items()) {
+    $find = array();
+
+    foreach ($_items as $item) {
+      $data = unserialize($item->data);
+      $item_id = $item->item_id;
+
+      if ( $data['events'][0]['meta']->href == $_href ) {
+        $find[] = $item_id;
+      }
+    }
+
+    return $find;
+  } else {
+    return false;
+  }
+}
+
+
+function smoy_delete_from_queue ( $_href ) {
+ $items = _smoy_find_in_queue($_href);
+}
