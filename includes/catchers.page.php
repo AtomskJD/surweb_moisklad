@@ -21,6 +21,9 @@ function smoy_catcherOne_page() {
     if ($json = json_decode($content)) {
       $operationURL = $json->events[0]->meta->href;
 
+    /*
+      Хук с моегосклада приходит быстрее чем проходит постановка в очередь
+     */ sleep(2);
     /**
      * кодга приходит хук или квази-хук проверим очередь и если есть ссылка
      * на такойже объект то удалим ее из очереди
@@ -150,61 +153,75 @@ function smoy_catcherTwo_page() {
         /*=================================
         =            positions            =
         =================================*/
-        $_positions = $moysklad->getRequestData( $document->data->positions->meta->href . "?limit=200" );
+        // лимит моегосклада 100 строк вывода на запрос
+        // получать значения будем из запроса первого
+        $_offset = 0;
+        $_size   = 0;
+        $_limit  = 0;
 
-        if ($_positions->code == 200) {
-          foreach ($_positions->data->rows as $position) {
-            if ($position->assortment->meta->type == 'product') {
-              $_product = $moysklad->getRequestData($position->assortment->meta->href);
-              
-              if ($_product->code == 200) {
-                // __name
-                // __qty
-                // __sku
+        do {
+          $_positions = $moysklad->getRequestData( $document->data->positions->meta->href . "?offset=" . $_offset );
 
-                $__name = $_product->data->name;
-                $__sku  =  $_product->data->code;
+          if ($_positions->code == 200) {
 
-                #DONE: продукт есть остатков нет... getProductStock вернет 201
+            $_offset = $_positions->meta->offset;
+            $_size   = $_positions->meta->size;
+            $_limit  = $_positions->meta->limit; 
 
-                $_product_stock = $moysklad->getProductStock( $_product->data->id);
+            foreach ($_positions->data->rows as $position) {
+              if ($position->assortment->meta->type == 'product') {
+                $_product = $moysklad->getRequestData($position->assortment->meta->href);
+                
+                if ($_product->code == 200) {
+                  // __name
+                  // __qty
+                  // __sku
 
-                if ($_product_stock->code == 200 ) {
-                  $__qty = $_product_stock->data->quantity;
+                  $__name = $_product->data->name;
+                  $__sku  =  $_product->data->code;
 
-                  if ( smoy_set_qty($__sku, $__qty) ) {
-                    $message = "[200 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
-                    watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
-                  } else {
-                    $message = "[200 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
-                    watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                  #DONE: продукт есть остатков нет... getProductStock вернет 201
+
+                  $_product_stock = $moysklad->getProductStock( $_product->data->id);
+
+                  if ($_product_stock->code == 200 ) {
+                    $__qty = $_product_stock->data->quantity;
+
+                    if ( smoy_set_qty($__sku, $__qty) ) {
+                      $message = "[200 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
+                    } else {
+                      $message = "[200 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                    }
+                    
+                  } // $_product_stock == 200
+                  elseif ($_product_stock->code == 201) {
+                    $__qty = 0;
+
+                    if ( smoy_set_qty($__sku, $__qty) ) {
+                      $message = "[201 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
+                    } else {
+                      $message = "[201 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                    }
+                  } // $_product_stock == 201
+                  else { 
+                  watchdog('moysklad_hook', "_product_stock " . json_encode($_product_stock), NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
                   }
-                  
-                } // $_product_stock == 200
-                elseif ($_product_stock->code == 201) {
-                  $__qty = 0;
-
-                  if ( smoy_set_qty($__sku, $__qty) ) {
-                    $message = "[201 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
-                    watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
-                  } else {
-                    $message = "[201 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
-                    watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
-                  }
-                } // $_product_stock == 201
+                } // $_product == 200
                 else { 
-                watchdog('moysklad_hook', "_product_stock " . json_encode($_product_stock), NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                  watchdog('moysklad_hook', "_product " . $_product->code, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
                 }
-              } // $_product == 200
-              else { 
-                watchdog('moysklad_hook', "_product " . $_product->code, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
               }
             }
+          } // $_positions == 200 
+          else {
+            watchdog('moysklad_hook', "_positions " . $_positions->code, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+            break;
           }
-        } // $_positions == 200 
-        else {
-          watchdog('moysklad_hook', "_positions " . $_positions->code, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
-        }
+        } while ($_offset <= $_size);
         /*=====  End of positions  ======*/
         
         /**

@@ -151,29 +151,30 @@ function smoy_rules_debug_action($value) {
  */
 function smoy_rules_action_send_order( $order ) {
   $moysklad = new Moysklad();
-  $actonOrder = $moysklad->setCustomerOrder($order);
+  $actionOrder = $moysklad->setCustomerOrder($order);
 
   /*
     Обработка непредвиденных событий (логика обработчика)
     Ряд событий требуют повторной отправки используя очереди
    */
   
-  if ($actonOrder->code == 200) {
+  if ($actionOrder->code == 200) {
+
     drupal_set_message($actionOrder->message, 'status', FALSE);
 
     #DONE : На случай если хук с моего склада не вернется, передаем объект 
     #       похожий на хук в очередь для обработки уже по крону...
     $queue = DrupalQueue ::get('surweb_moysklad_check_orders');
     $queue->createQueue();
-    $queue->createItem(smoy_create_quasi_hook($actonOrder->meta, "CREATE"));
+    $queue->createItem(smoy_create_quasi_hook($actionOrder->meta, "CREATE"));
 
   } elseif (
-      $actonOrder->code == 404 || // Запрошенный ресурс не существует
-      $actonOrder->code == 429 || // Превышен лимит количества запросов
-      $actonOrder->code == 500 || // При обработке запроса возникла непредвиденная ошибка
-      $actonOrder->code == 502 || // Сервис временно недоступен
-      $actonOrder->code == 503 || // Сервис временно отключен
-      $actonOrder->code == 504    // Превышен таймаут обращения к сервису, повторите попытку позднее
+      $actionOrder->code == 404 || // Запрошенный ресурс не существует
+      $actionOrder->code == 429 || // Превышен лимит количества запросов
+      $actionOrder->code == 500 || // При обработке запроса возникла непредвиденная ошибка
+      $actionOrder->code == 502 || // Сервис временно недоступен
+      $actionOrder->code == 503 || // Сервис временно отключен
+      $actionOrder->code == 504    // Превышен таймаут обращения к сервису, повторите попытку позднее
     ) {
       $queue_add    = DrupalQueue::get('surweb_moysklad_add_oreder');
       $queue_add->createQueue();
@@ -186,25 +187,29 @@ function smoy_rules_action_send_order( $order ) {
 
 function smoy_rules_action_update_order( $order ) {
   $moysklad = new Moysklad();
-  $actonOrder = $moysklad->putCustomerOrder($order);
+  $actionOrder = $moysklad->putCustomerOrder($order);
   
 
-  if ($actonOrder->code == 200) {
+  if ($actionOrder->code == 200) {
+    // если изменения небыли внесены на мой склад но заказ пересохранен в 
+    // коммерце необходимо очистить очередь от дубликатов
+    smoy_delete_from_queue($actionOrder->meta->href);
+
     drupal_set_message($actionOrder->message, 'status', FALSE);
 
     #DONE : На случай если хук с моего склада не вернется, передаем объект 
     #       похожий на хук в очередь для обработки уже по крону...
     $queue = DrupalQueue ::get('surweb_moysklad_check_orders');
     $queue->createQueue();
-    $queue->createItem(smoy_create_quasi_hook($actonOrder->meta, "UPDATE"));
+    $queue->createItem(smoy_create_quasi_hook($actionOrder->meta, "UPDATE"));
 
   } elseif (
-      $actonOrder->code == 404 || // Запрошенный ресурс не существует
-      $actonOrder->code == 429 || // Превышен лимит количества запросов
-      $actonOrder->code == 500 || // При обработке запроса возникла непредвиденная ошибка
-      $actonOrder->code == 502 || // Сервис временно недоступен
-      $actonOrder->code == 503 || // Сервис временно отключен
-      $actonOrder->code == 504    // Превышен таймаут обращения к сервису, повторите попытку позднее
+      $actionOrder->code == 404 || // Запрошенный ресурс не существует
+      $actionOrder->code == 429 || // Превышен лимит количества запросов
+      $actionOrder->code == 500 || // При обработке запроса возникла непредвиденная ошибка
+      $actionOrder->code == 502 || // Сервис временно недоступен
+      $actionOrder->code == 503 || // Сервис временно отключен
+      $actionOrder->code == 504    // Превышен таймаут обращения к сервису, повторите попытку позднее
     ) {
       $queue_add    = DrupalQueue::get('surweb_moysklad_update_oreder');
       $queue_add->createQueue();
@@ -218,7 +223,7 @@ function smoy_rules_action_update_order( $order ) {
 
 function smoy_rules_action_delete_order( $order ) {
   $moysklad = new Moysklad();
-  $actonOrder = $moysklad->delCustomerOrder($order);
+  $actionOrder = $moysklad->delCustomerOrder($order);
   drupal_set_message($actionOrder->message, 'message', FALSE);
 
 }
@@ -226,7 +231,12 @@ function smoy_rules_action_delete_order( $order ) {
 
 
 
-function smoy_rules_conditions_checkDiscount( $_order, $_discount ) {
+function smoy_rules_conditions_checkDiscount( $_order = NULL, $_discount = NULL ) {
+  
+  if (is_null($_order) || is_null($_discount)) {
+    return false;  
+  }
+
   $order_wrapper = entity_metadata_wrapper('commerce_order', $_order);
   $order_discount_name = $order_wrapper->commerce_customer_billing->field_disc->value();
 
