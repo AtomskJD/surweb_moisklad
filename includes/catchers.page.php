@@ -216,6 +216,9 @@ function smoy_catcherTwo_page() {
                 }
               }
             }
+            
+
+            $_offset += $_limit; //loop iterator
           } // $_positions == 200 
           else {
             watchdog('moysklad_hook', "_positions " . $_positions->code, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
