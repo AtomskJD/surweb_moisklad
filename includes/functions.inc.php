@@ -65,6 +65,13 @@ function my_module_form_submit_one($form, &$form_state) {
  * HOOKs handlers for form
  */
 
+
+
+
+
+/**
+ * Form handler function -- hooks.page.php
+ */
 function smoy_deleteHook($form, &$form_state) {
     if ($form_state['clicked_button']['#name'] == 'del_op') {
         $moysklad = new Moysklad();
@@ -80,6 +87,13 @@ function smoy_deleteHook($form, &$form_state) {
     // $form_state['clicked_button']['#hook_id'];
 }
 
+
+
+
+
+/**
+ * Form handler function -- hooks.page.php
+ */
 function smoy_addHook ($form, &$form_state) {
   if ($form_state['clicked_button']['#name'] == 'add_op') {
     $moysklad = new Moysklad();
@@ -98,11 +112,13 @@ function smoy_addHook ($form, &$form_state) {
 
 
 
+
+
 /**
  * функция изменения остатков для страницы отлова хуков
- * @param  [type] $_sku [description]
- * @param  [type] $_qty [description]
- * @return [type]       [description]
+ * @param  string $_sku   SKU в моем складе должно быть уникальным
+ * @param  mixed  $_qty   Чаще приходит в формате float - конвертируется в целое
+ * @return bool
  */
 function smoy_set_qty ($_sku = NULL, $_qty = NULL) {
     if (is_null($_sku) || is_null($_qty)) {
@@ -124,10 +140,11 @@ function smoy_set_qty ($_sku = NULL, $_qty = NULL) {
 
 
 
-/**
- * QUEUE FUNCTION's
- */
 
+
+/**
+ * QUEUE test FUNCTION's
+ */
 function smoy_getQueues() {
   $queue_add    = DrupalQueue::get('surweb_moysklad_add_oreder');
   $queue_update = DrupalQueue::get('surweb_moysklad_update_oreder');
@@ -143,8 +160,8 @@ function smoy_getQueues() {
 /**
  * Конвертация имен статусов коммерца в имена моего склада
  * Статус далее отправляется на мой склад
- * @param  [type] $_commerce_state_name_value [description]
- * @return [type]                             [description]
+ * @param  string $_commerce_state_name_value   Машинное имя из коммерца
+ * @return string                               Имя статуса в формате моегосклада
  */
 function smoy_commerce_to_moysklad_state_conv ( $_commerce_state_name_value ) {
   switch ($_commerce_state_name_value) {
@@ -208,7 +225,14 @@ function smoy_order_status_is_complete ( $_order_status ) {
 
 
 
-
+/**
+ * Создание виртуального хука
+ * в дальнейлем отправляем его как обычный хук на страницу которая ловит
+ * хуки от моего склада, 
+ * @param  string   $meta     Метаданные объекта заказа в формате моегосклада
+ * @param  string   $action   тип событая в формате вебхука CREATE, UPDATE, DELETE
+ * @return array              Возвращает хук json_decoded
+ */
 function smoy_create_quasi_hook ( $meta, $action) {
   $hook = array(
     "quasi_hook" => true,
@@ -221,30 +245,28 @@ function smoy_create_quasi_hook ( $meta, $action) {
 }
 
 
+
+
+
+
+/**
+ * тестируем http || https
+ * @return [type] [description]
+ */
 function smoy_isSSL() { 
   return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443; 
 }
 
 
 
-function smoy_queue_check_orders__item_remove( $search ) {
-  $queue    = DrupalQueue ::get('surweb_moysklad_check_orders');
-  $queue->createQueue();
-  $itemsCount = $queue->numberOfItems();
-
-  for ($i=0; $i < $itemsCount; $i++) { 
-    
-  }
-
-  dpm($queue->claimItem());
 
 
-}
-
-
-
-
-
+/**
+ * Возвращает список задач из очереди
+ * *служебная функция
+ * @param  string   имя очереди
+ * @return array    Вернет массив с задачами
+ */
 function _smoy_queue_items( $queue_name = 'surweb_moysklad_check_orders') {
 
     $items = db_query('SELECT data, item_id, name FROM {queue} q WHERE name = :name ORDER BY created, item_id ASC', array(':name' => $queue_name ))->fetchAll();
@@ -258,6 +280,14 @@ function _smoy_queue_items( $queue_name = 'surweb_moysklad_check_orders') {
 
 
 
+
+
+/**
+ * Поиск задачи по href
+ * *служебная функция
+ * @param  string     строка для сравнения
+ * @return array      массив совпадений array[item_id1, item_id_2, ... ]
+ */
 function _smoy_find_in_queue ( $_href ) {
   if ($_items = _smoy_queue_items()) {
     $find = array();
@@ -278,6 +308,26 @@ function _smoy_find_in_queue ( $_href ) {
 }
 
 
+
+
+
+/**
+ * Удаляет задание из очереди при совпадении href
+ * @param  string       строка для поиска 
+ * @return bool         true
+ */
 function smoy_delete_from_queue ( $_href ) {
- $items = _smoy_find_in_queue($_href);
+  $queue_name = 'surweb_moysklad_check_orders';
+  $items = _smoy_find_in_queue($_href);
+
+  if (empty($items)) {
+    return false;
+  }
+
+  foreach ($items as $item_id) {
+    db_query("DELETE FROM {queue} WHERE name = :name AND item_id = :item_id", array(':name' => $queue_name, ':item_id' => $item_id)); 
+  }
+
+  return true;
+
 }

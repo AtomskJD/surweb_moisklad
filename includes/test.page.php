@@ -183,7 +183,6 @@ function smoy_test_page() {
 
       // dpm($_SERVER);
 
-      commerce_cart_order_refresh($order);
 
     // // $process = curl_init("https://webhook.site/74e0df5e-67be-418e-9c56-155a4d7390de");
     // $process = curl_init("http://kolyaskin-dev.surweb.ru/smoy-sync");
@@ -202,7 +201,7 @@ function smoy_test_page() {
     //     $queue->createQueue();
     //     $itemsCount = $queue->numberOfItems();
         
-        $iis = _smoy_find_in_queue("https://online.moysklad.ru/api/remap/1.1/entity/customerorder/db9e523c-5440-11e9-9107-504800131f12");
+        $iis = smoy_delete_from_queue("https://online.moysklad.ru/api/remap/1.1/entity/customerorder/83d771bd-5454-11e9-9109-f8fc00144274");
         dpm($iis);
 
 

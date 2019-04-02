@@ -23,10 +23,9 @@ function smoy_catcherOne_page() {
 
     /**
      * кодга приходит хук или квази-хук проверим очередь и если есть ссылка
-     * на такойже объект то одаляем ее
-     */
+     * на такойже объект то удалим ее из очереди
+     */ smoy_delete_from_queue($operationURL);  
     
-      smoy_queue_check_orders__item_remove($operationURL);  
 
       $document = $moysklad->getRequestData($operationURL);
       

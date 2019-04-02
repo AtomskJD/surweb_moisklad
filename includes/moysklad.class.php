@@ -826,7 +826,7 @@ class Moysklad
         if ($_product->code == 201) {
           $missedProducts .= "\t * " . $sku ." ". $title ." - ". $quantity . "\n";
         }
-        #TODO : Add discount for creating order
+
         if ($_product->code == 200) {
           $position = array(
             "quantity"    => (int)$quantity,
