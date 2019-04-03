@@ -8,6 +8,6 @@ configure = admin/commerce/smoy-settings
 dependencies[] = commerce
 dependencies[] = rules
 
-version = "7.x-3.0"
+version = "7.x-3.1"
 project = SURWEB
-datestamp = 1549954027
+datestamp = 1554266818
