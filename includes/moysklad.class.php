@@ -46,7 +46,7 @@ class Moysklad
       curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $_url);
@@ -91,7 +91,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path);
@@ -136,7 +136,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -161,6 +161,7 @@ class Moysklad
 
 
   /**
+   * Получение информации о магазине
    * @param  $externalCode =  поле фильтр для поиска 
    * @return Стандартный массив -> объект
    */
@@ -182,7 +183,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -221,7 +222,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -250,6 +251,7 @@ class Moysklad
 
 
   /**
+   * Получение информации о товаре по sku в формате commerce
    * @param  $code =  поле фильтр для поиска 
    * @return Стандартный массив -> объект
    */
@@ -271,7 +273,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
 
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -306,6 +308,7 @@ class Moysklad
 
 
   /**
+   * Получение остатков товара по ид в формате моегосклада
    * @param  $_id =  поле фильтр для поиска по ИД товара
    * @return Стандартный массив -> объект
    */
@@ -327,7 +330,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -336,7 +339,7 @@ class Moysklad
         if (empty(json_decode($return)->rows)) {
           
           $code     = 201;
-          $message  = "Данные товара Ид: $_id. <strong>НЕ найдены!</strong>";
+          $message  = "Данные товара Ид: " . $_id . ". НЕ найдены!";
           $meta     = '';
           $data     = '';
           
@@ -388,7 +391,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
 
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -397,7 +400,7 @@ class Moysklad
         if (empty(json_decode($return)->rows)) {
           
           $code     = 201;
-          $message  = "Данные операции Ид: $_operationId. <strong>НЕ найдены!</strong>";
+          $message  = "Данные операции Ид: $_operationId. НЕ найдены!";
           $meta     = '';
           $data     = '';
           
@@ -415,6 +418,7 @@ class Moysklad
     return (object)array(
       'code'=>$code, 'message'=>$message, 'meta' => $meta, 'data' => $data);
 }
+
 
 
 
@@ -443,7 +447,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
 
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -452,7 +456,7 @@ class Moysklad
         if (empty(json_decode($return)->rows)) {
           
           $code     = 201;
-          $message  = "Данные операции Ид: $_operationId. <strong>НЕ найдены!</strong>";
+          $message  = "Данные операции Ид: $_operationId. НЕ найдены!";
           $meta     = '';
           $data     = '';
           
@@ -469,7 +473,8 @@ class Moysklad
 
     return (object)array(
       'code'=>$code, 'message'=>$message, 'meta' => $meta, 'data' => $data);
-}
+  }
+
 
 
 
@@ -497,7 +502,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
 
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -506,7 +511,7 @@ class Moysklad
         if (empty(json_decode($return)->rows)) {
           
           $code     = 201;
-          $message  = "Данные операции Ид: $_operationId. <strong>НЕ найдены!</strong>";
+          $message  = "Данные операции Ид: $_operationId. НЕ найдены!";
           $meta     = '';
           $data     = '';
           
@@ -548,7 +553,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $_URL);
@@ -568,10 +573,12 @@ class Moysklad
 
 
 
+
+
   /**
-   * ПОЛУЧЕНИЕ ЗАКАЗА
-   * @param  $_search =  поле фильтр для поиска по ИД товара
-   * @return Стандартный массив -> объект
+   * Получение списка заказов (по номеру или полный список)
+   * @param  string $_search Строка поиска (может найти не только по имени заказа, но, например и по номеру телефона!!!)
+   * @return Object          Интерфейсный объект
    */
   public function getCustomerOrders( $_search = NULL ) {
 
@@ -590,20 +597,21 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
       } else {
         if (empty(json_decode($return)->rows)) {
           $code     = 201;
-          $message  = "Данные товара Ид: $_id. <strong>НЕ найдены!</strong>";
+          $message  = "Данные заказа Ид: " . $_search . ". НЕ найдены!";
           $meta     = '';
           $data     = '';
           
         } else {
 
           $code     = $_resp_code;
+          $meta     = json_decode($return)->meta;
           $size     = json_decode($return)->meta->size;
           $data     = json_decode($return)->rows;
           $message  = "Найдено " .$size. " заказов";
@@ -643,7 +651,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -696,7 +704,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -752,9 +760,9 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
-        $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
+        $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error . " :: " . __METHOD__;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path);
       } else {
 
@@ -773,17 +781,18 @@ class Moysklad
 
 
 
-    /**
+  /**
    * СОЗДАНИЕ ЗАКАЗА
-   * @param  $_order =  объект заказа из commerce
-   * @return Стандартный массив -> объект
+   * @param  Object  $_order    объект заказа в формате commerce
+   * @return Object             Интерфейсный объект
    */
   public function setCustomerOrder( $_order = NULL ) {
-    // if (is_null($_order)) {
-    //   $code = 400;
-    //   $message = 'Order обязательный параметр';
-    //   return array('code'=>$code, 'message'=>$message, 'meta' => '');
-    // }
+    if (is_null($_order)) {
+      $code = 400;
+      $message  = "[$code] - Order обязательный параметр (" . __METHOD__ . "-->" . __LINE__ . ")";
+      watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path);
+      return array('code'=>$code, 'message'=>$message, 'meta' => '');
+    }
 
     $order_wrapper = entity_metadata_wrapper('commerce_order', $_order);
     
@@ -885,9 +894,9 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
-        $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
+        $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error . " (" . __METHOD__ . "-->" . __LINE__ . ")";
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path);
         /*
           Обработка непредвиденных событий в обработчике не в классе (rules.inc.php -> smoy_rules_action_send_order())
@@ -911,17 +920,54 @@ class Moysklad
 
 
 
-    /**
+  /**
    * ОБНОВЛЕНИЕ ЗАКАЗА
-   * @param  $_order =  объект заказа из commerce
-   * @return Стандартный массив -> объект
+   * @param  Object   $_order  объект заказа в формате commerce
+   * @return Object   Интерфейсный объект
    */
   public function putCustomerOrder( $_order = NULL ) {
     if (is_null($_order)) {
       $code = 400;
-      $message = 'Order обязательный параметр';
+      $message  = "[$code] - Order обязательный параметр (" . __METHOD__ . "-->" . __LINE__ . ")";
+      watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path);
       return array('code'=>$code, 'message'=>$message, 'meta' => '');
     }
+
+    /*======================================================
+    =            валидация заказа на моемскладе            =
+    ======================================================*/
+    $_name = $_order->order_id;
+    $_moyOrder = $this->getCustomerOrders($_name);
+    
+    // exit 1 особенность коммерца:
+    // запускаются и правило на создание и на изменение
+    if ($_moyOrder->code != 200) {
+      $code     = $_moyOrder->code;
+      $message  = "[$code] - " . $_moyOrder->message . " (" . __METHOD__ . "-->" . __LINE__ . ")";
+
+      // не ошибка лог не нужен
+      return (object)array(
+      'code'=>$code, 'message'=>$message, 'meta' => '', 'data' => '');
+
+    }
+
+    $__order_id = '';
+    foreach ($_moyOrder->data as $row) {
+      if ($_name == $row->name) {
+        $__order_id = $row->id;
+      }
+    }
+
+    // exit 2
+    if (empty($__order_id)) {
+      $code     = 401;
+      $message  = "[$code] - " . "Order_id не найден (" . __METHOD__ . "-->" . __LINE__ . ")";
+
+      // не ошибка лог не нужен
+      return (object)array(
+        'code'=>$code, 'message'=>$message, 'meta' => '', 'data' => '');
+    }
+    /*=====  End of валидация заказа на моемскладе  ======*/
 
     $order_wrapper = entity_metadata_wrapper('commerce_order', $_order);
     $order_status = $order_wrapper->status->value();
@@ -994,17 +1040,7 @@ class Moysklad
 
 
     /* ==== */
-    $_name = $_order->order_id;
     $description = $user_form_from_order . $missedProducts . $order_discounts;
-
-    $_moyOrder = $this->getCustomerOrders($_name);
-    $__order_id = '';
-    foreach ($_moyOrder->data as $row) {
-      if ($_name == $row->name) {
-        $__order_id = $row->id;
-      }
-    }
-
     $path   = '/entity/customerorder';
     $query  = '/' . $__order_id;
 
@@ -1045,9 +1081,9 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
-        $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
+        $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error . " (" . __METHOD__ . "-->" . __LINE__ . ")";
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
       } else {
 
@@ -1131,14 +1167,14 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
       } else {
         if (empty(json_decode($return)->rows)) {
           $code     = 201;
-          $message  = "Данные товара Ид: $_id. <strong>НЕ найдены!</strong>";
+          $message  = "Данные заказа Ид: $_name. <strong>НЕ найдены!</strong>";
           $meta     = '';
           $data     = '';
           
@@ -1178,7 +1214,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -1231,7 +1267,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -1275,7 +1311,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
@@ -1317,7 +1353,7 @@ class Moysklad
       $return = curl_exec($process);
       $_resp_code = curl_getinfo($process, CURLINFO_RESPONSE_CODE);
       
-      if ( (json_decode($return)->errors[0]) || ($_resp_code != 200) ) {
+      if ( ((isset(json_decode($return)->errors)) && (json_decode($return)->errors[0])) || ($_resp_code != 200) ) {
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);

@@ -146,8 +146,14 @@ function smoy_rules_debug_action($value) {
 }
 
 
+
+
+
+
 /**
- * Rules action for debugging values.
+ * Экшен правило отправки заказа на мой склад
+ * @param  Object  $order   Объект заказа
+ * @return Object           Интерфейсный объект
  */
 function smoy_rules_action_send_order( $order ) {
   $moysklad = new Moysklad();
@@ -160,7 +166,8 @@ function smoy_rules_action_send_order( $order ) {
   
   if ($actionOrder->code == 200) {
 
-    drupal_set_message($actionOrder->message, 'status', FALSE);
+    // drupal_set_message($actionOrder->message, 'status', FALSE);
+    watchdog('moysklad_rules', $actionOrder->message, NULL, WATCHDOG_INFO, NULL);
 
     #DONE : На случай если хук с моего склада не вернется, передаем объект 
     #       похожий на хук в очередь для обработки уже по крону...
@@ -179,12 +186,22 @@ function smoy_rules_action_send_order( $order ) {
       $queue_add    = DrupalQueue::get('surweb_moysklad_add_oreder');
       $queue_add->createQueue();
       $queue_add->createItem($order);
-      drupal_set_message($actionOrder->message, 'error', FALSE);
+      // drupal_set_message($actionOrder->message, 'error', FALSE);
+      watchdog('moysklad_rules', $actionOrder->message, NULL, WATCHDOG_ERROR, NULL);
+
   }
 
 }
 
 
+
+
+
+/**
+ * Экшен правило на обновление существующего заказа на моемскладе
+ * @param  Object $order объект commerce order
+ * @return Object        Интерфейсный объект
+ */
 function smoy_rules_action_update_order( $order ) {
   $moysklad = new Moysklad();
   $actionOrder = $moysklad->putCustomerOrder($order);
@@ -195,7 +212,8 @@ function smoy_rules_action_update_order( $order ) {
     // коммерце необходимо очистить очередь от дубликатов
     smoy_delete_from_queue($actionOrder->meta->href);
 
-    drupal_set_message($actionOrder->message, 'status', FALSE);
+    // drupal_set_message($actionOrder->message, 'status', FALSE);
+    watchdog('moysklad_rules', $actionOrder->message, NULL, WATCHDOG_INFO, NULL);
 
     #DONE : На случай если хук с моего склада не вернется, передаем объект 
     #       похожий на хук в очередь для обработки уже по крону...
@@ -214,10 +232,13 @@ function smoy_rules_action_update_order( $order ) {
       $queue_add    = DrupalQueue::get('surweb_moysklad_update_oreder');
       $queue_add->createQueue();
       $queue_add->createItem($order);
-      drupal_set_message($actionOrder->message, 'error', FALSE);
+      // drupal_set_message($actionOrder->message, 'error', FALSE);
+      watchdog('moysklad_rules', $actionOrder->message, NULL, WATCHDOG_ERROR, NULL);
   }
 
 }
+
+
 
 
 
@@ -230,7 +251,12 @@ function smoy_rules_action_delete_order( $order ) {
 
 
 
-
+/**
+ * Условие для правила
+ * @param  Object $_order    commerce order
+ * @param  string $_discount Значение ключа для поля скидка в форме билинга для пользователя
+ * @return bool            TRUE если есть совпадение
+ */
 function smoy_rules_conditions_checkDiscount( $_order = NULL, $_discount = NULL ) {
   
   if (is_null($_order) || is_null($_discount)) {
@@ -253,7 +279,11 @@ function smoy_rules_conditions_checkDiscount( $_order = NULL, $_discount = NULL 
 
 
 
-
+/**
+ * Экшен правило которое можно использовать для динамической проверки остатков на моемскладе
+ * @param  [type] $code [description]
+ * @return [type]       [description]
+ */
 function smoy_rules_action_checkProduct($code) {
   drupal_set_message($code, 'status', FALSE);
   $moysklad = new Moysklad();
@@ -272,13 +302,27 @@ function smoy_rules_action_checkProduct($code) {
   }
 }
 
-/**
- * The action function for rules_example_action_hello_world
- */
-function demo_rules_actions_hello_world() {
-  drupal_set_message(t('Hello World'));
-} 
  
+
+
+
+
+
+/**
+ * Экшен правило принудительного ценообразования
+ * @param  [type] $_order [description]
+ * @return [type]         [description]
+ */
+function smoy_rules_action_refresh_order ( $_order ) {
+  commerce_cart_order_refresh($_order);
+  return true;
+}
+
+
+
+
+/*----------  Старые демки  ----------*/
+
 /** 
  * The action function for rules_example_action_hello_user
  */
@@ -291,7 +335,9 @@ function demo_rules_actions_hello_user($account, $text) {
 
 
 
-function smoy_rules_action_refresh_order ( $_order ) {
-  commerce_cart_order_refresh($_order);
-  return true;
-}
+/**
+ * The action function for rules_example_action_hello_world
+ */
+function demo_rules_actions_hello_world() {
+  drupal_set_message(t('Hello World'));
+} 
