@@ -9,6 +9,7 @@ include_once('functions.inc.php');
 - Заказ покупателя
 - Розничная продажа
 - Счёт покупателю
+ * URL: /smoy-sync
  */
 function smoy_catcherOne_page() {
   $moysklad = new Moysklad();
@@ -133,7 +134,7 @@ function smoy_catcherOne_page() {
 /*----------  CATCHER TWO Handler  ----------*/
 /**
  * Обработка хуков от документов без поддержки report/stock/byoperation
- * @return [type] [description]
+ * URL: /smoy-sync-type-2
  */
 function smoy_catcherTwo_page() {
   $moysklad = new Moysklad();
@@ -176,6 +177,9 @@ function smoy_catcherTwo_page() {
                   // __name
                   // __qty
                   // __sku
+                  // 
+                  // __price
+                  // __zakup
 
                   $__name = $_product->data->name;
                   $__sku  =  $_product->data->code;
@@ -186,25 +190,33 @@ function smoy_catcherTwo_page() {
 
                   if ($_product_stock->code == 200 ) {
                     $__qty = $_product_stock->data->quantity;
+                    $__price = $_product_stock->data->salePrice;
+                    $__zakup = $_product_stock->data->price;
 
+                    // Изменение остатков если есть такое изменение
                     if ( smoy_set_qty($__sku, $__qty) ) {
-                      $message = "[200 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
-                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
-                    } else {
-                      $message = "[200 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
-                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                      $message = "[QTY CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
+                    } 
+
+                    // Изменение цены продажи если есть такое изменение
+                    if ( smoy_set_price($__sku, $__price)) {
+                      $message = "[PRICE CHANGE] - " . $__sku . " - " . $__name . ": " . (int)$__price / 100 . " руб. ";
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
                     }
-                    
+                    // Изменение цены закупа если есть такое изменение
+                    if ( smoy_set_zakup_price($__sku, $__zakup)) {
+                      $message = "[ZAKUP CHANGE] - " . $__sku . " - " . $__name . ": " . (int)$__zakup / 100 . " руб. ";
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
+                    }
+
                   } // $_product_stock == 200
                   elseif ($_product_stock->code == 201) {
                     $__qty = 0;
 
                     if ( smoy_set_qty($__sku, $__qty) ) {
-                      $message = "[201 CHANGE] - " . $__sku . " - " . $__name . ": " . $__qty;
-                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync-type-2");
-                    } else {
-                      $message = "[201 SIMILAR] - " . $__sku . " - " . $__name . ": " . $__qty;
-                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync-type-2");
+                      $message = "[QTY ZERO] - " . $__sku . " - " . $__name;
+                      watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
                     }
                   } // $_product_stock == 201
                   else { 
@@ -264,15 +276,28 @@ function smoy_catcherTwo_page() {
             $__sku  = $audit_request->data->code;
             $__name = $audit_request->data->code;
             $_audit_request_stock = $moysklad->getProductStock($audit_request->data->id);
+
             $__qty = $_audit_request_stock->data->quantity;
+            $__price = $_audit_request_stock->data->salePrice;
+            $__zakup = $_audit_request_stock->data->price;
             
             if ( smoy_set_qty($__sku, $__qty) ) {
-                  $message = "[CHAN] - " . $__sku . " " . $__name . " " . $__qty;
-                  watchdog('moysklad_hook', $message, NULL, WATCHDOG_NOTICE, "/smoy-sync");
-            } else {
-              $message = "[FAIL] - " . $__sku . " " . $__name . " " . $__qty;
-              watchdog('moysklad_hook', $message, NULL, WATCHDOG_ALERT, "/smoy-sync");
+              $message = "[QTY AUDIT] - " . $__sku . " " . $__name . " " . $__qty;
+              watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
             }
+
+            // Изменение цены продажи если есть такое изменение
+            if ( smoy_set_price($__sku, $__price)) {
+              $message = "[PRICE AUDIT] - " . $__sku . " - " . $__name . ": " . (int)$__price / 100 . " руб.";
+              watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
+            }
+            // Изменение цены закупа если есть такое изменение
+            if ( smoy_set_zakup_price($__sku, $__zakup)) {
+              $message = "[ZAKUP AUDIT] - " . $__sku . " - " . $__name . ": " . (int)$__zakup / 100 . " руб.";
+              watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
+            }
+
+
           }
 
         } else {
@@ -291,3 +316,54 @@ function smoy_catcherTwo_page() {
   }
 } /*----------  END  ----------*/
 
+
+
+
+
+
+/*----------  Обновление информации о товаре && Создание товара  ----------*/
+/**
+ * Для обработки веб хуков на товар
+ * URL: /smoy-sync-product
+ */
+function smoy_catcher_page__product() {
+   if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $content = file_get_contents("php://input");
+    $message = "[webhook] - " . $content;
+    watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
+
+    if ($json = json_decode($content)) {
+      $moysklad = new Moysklad();
+
+      $operationURL = $json->events[0]->meta->href;
+      $entityName   = $json->events[0]->meta->type; // supply | loss | enter
+      $actionType   = $json->events[0]->action;
+
+      $message = "[webhook__product] - " . $content;
+      watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
+      
+      $product = $moysklad->getRequestData($operationURL);
+
+      if ($product->code == 200) {
+        // в копейках
+        // _salePrice $product->data->salePrices[0]->value 
+        // _buyPrice  buyPrice->value Изменять не будем -- это рекомендованая цена
+        // $product->data->archived
+        // $product->data->code
+        // $product->data->description = может не быть
+        // $product->data->group->meta = может не быть
+
+        $__sku = $product->data->code;
+        $__price = $product->data->salePrices[0]->value;
+
+
+      }
+
+
+    /*
+      Хук с моегосклада приходит быстрее чем проходит постановка в очередь
+     */ sleep(2);
+    }
+  }
+}
+/*----------  END  ----------*/

@@ -124,12 +124,71 @@ function smoy_set_qty ($_sku = NULL, $_qty = NULL) {
     if (is_null($_sku) || is_null($_qty)) {
         return false;
     }
-
+    $_qty = (int)$_qty;
     $product = commerce_product_load_by_sku($_sku);
     if ($product) {
         $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
-        if ((int)$pro_wrapper->commerce_stock->value() != (int)$_qty) {
+        if ((int)$pro_wrapper->commerce_stock->value() != $_qty) {
             $pro_wrapper->commerce_stock->set($_qty);
+            $pro_wrapper->save();
+            return true;
+        } 
+    } 
+
+    return false;
+}
+
+
+
+
+
+
+/**
+ * функция изменения цены продажи товара
+ * @param  string $_sku   SKU в моем складе должно быть уникальным
+ * @param  mixed  $_price цена в копейках
+ * @return bool
+ */
+function smoy_set_price ($_sku = NULL, $_price = NULL) {
+    if (is_null($_sku) || is_null($_price)) {
+        return false;
+    }
+
+    $_price = (int)$_price;
+    $product = commerce_product_load_by_sku($_sku);
+    if ($product) {
+        $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
+        if ((int)$pro_wrapper->commerce_price->amount->value() != $_price) {
+            $pro_wrapper->commerce_price->amount->set($_price);
+            $pro_wrapper->save();
+            return true;
+        } 
+    } 
+
+    return false;
+}
+
+
+
+
+
+/**
+ * функция изменения закупочной цены товара
+ * @param  string $_sku   SKU в моем складе должно быть уникальным
+ * @param  mixed  $_price цена в копейках
+ * @return bool
+ */
+function smoy_set_zakup_price ($_sku = NULL, $_price = NULL) {
+    if (is_null($_sku) || is_null($_price)) {
+        return false;
+    }
+
+    $_price = (int)$_price;
+    $product = commerce_product_load_by_sku($_sku);
+    if ($product) {
+        $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
+        if ((int)$pro_wrapper->field_zakup->amount->value() != $_price) {
+            $pro_wrapper->field_zakup->amount->set($_price);
             $pro_wrapper->save();
             return true;
         } 
@@ -276,6 +335,28 @@ function _smoy_queue_items( $queue_name = 'surweb_moysklad_check_orders') {
     }
 
       return FALSE;
+}
+
+
+
+
+
+/**
+ * Ищем nid из id товара
+ * @param  int $_product_id Ид товара в commerce
+ * @return int              nid
+ */
+function smoy_get_nid_from_pid ( $_product_id = NULL ) {
+  if (is_null($_product_id)) {
+    return false;
+  }
+
+  $nid = db_query('SELECT entity_id FROM {field_data_field_tocart} WHERE field_tocart_product_id = :pid', array(':pid' => $_product_id))->fetchColumn();
+  if (!empty($nid)) {
+    return $nid;
+  }
+
+  return "dodod";
 }
 
 

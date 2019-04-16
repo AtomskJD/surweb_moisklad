@@ -75,28 +75,19 @@ function smoy_test_page() {
   ////////////////////
 
 
-  $_offset = 0;
-  $_size   = 0;
-  $_limit  = 0;
+$_sku = '008031';
 
-  do {
-    $url = "https://online.moysklad.ru/api/remap/1.1/report/stock/all?limit=4". "&offset=".$_offset;
-
-    $request = $moysklad->getRequestData($url);
-
-    $_offset = $request->meta->offset;
-    $_size   = $request->meta->size;
-    $_limit  = $request->meta->limit;    
-
-    kpr($request->code);
-    kpr($request->meta);
-
-    foreach ($request->data->rows as $row) {
-      dpm($row->code . " -- " . $row->name);
+$product = commerce_product_load_by_sku($_sku);
+    if ($product) {
+        $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
+        // $pro_wrapper->commerce_price->amount->set(131313);
+        // $pro_wrapper->field_zakup->amount->set(101010);
+        // $pro_wrapper->save();
+        dpm((int)$pro_wrapper->commerce_price->amount->value() / 100 );
+        $product_id = $pro_wrapper->product_id->value();
+        dpm(smoy_get_nid_from_pid($product_id));
+        dpm($pro_wrapper->value());
     }
-
-    $_offset += $_limit;
-  } while ($_offset <= $_size);
 
 
 

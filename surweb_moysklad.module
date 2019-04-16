@@ -37,13 +37,13 @@ function surweb_moysklad_permission() {
 function surweb_moysklad_menu () {
   $items = array();
 
-  // $items['admin/commerce/smoy-test'] = array(
-  //   'title' => 'Мойсклад тесты',
-  //   'description' => 'Мойсклад дебаг и тесты',
-  //   'page callback' => 'smoy_test_page',
-  //   'access arguments' => array('surweb moysklad'),
-  //   'type' => MENU_NORMAL_ITEM,
-  // );
+  $items['admin/commerce/smoy-test'] = array(
+    'title' => 'Мойсклад тесты',
+    'description' => 'Мойсклад дебаг и тесты',
+    'page callback' => 'smoy_test_page',
+    'access arguments' => array('surweb moysklad'),
+    'type' => MENU_NORMAL_ITEM,
+  );
 
   $items['admin/commerce/smoy-settings'] = array(
     'title' => 'Мойсклад настройки',
@@ -84,6 +84,15 @@ function surweb_moysklad_menu () {
     'title' => 'Синхронизация',
     'description' => 'Запуск от вебхука',
     'page callback' => 'smoy_catcherTwo_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+    /* второй тип хуков - когда report/stock/byoperation не доступен */
+  $items['smoy-sync-product'] = array(
+    'title' => 'Синхронизация информации товаров',
+    'description' => 'Запуск от вебхука',
+    'page callback' => 'smoy_catcher_page__product',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
