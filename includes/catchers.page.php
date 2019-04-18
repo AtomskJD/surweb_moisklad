@@ -346,15 +346,46 @@ function smoy_catcher_page__product() {
 
       if ($product->code == 200) {
         // в копейках
-        // _salePrice $product->data->salePrices[0]->value 
         // _buyPrice  buyPrice->value Изменять не будем -- это рекомендованая цена
         // $product->data->archived
-        // $product->data->code
         // $product->data->description = может не быть
         // $product->data->group->meta = может не быть
 
-        $__sku = $product->data->code;
+        // данные документа
+        $__sku   = $product->data->code;
         $__price = $product->data->salePrices[0]->value;
+        $__title = $product->data->name;
+
+
+        // Проверить наличие товара и ноды на сайте
+        if( $commerce_product = commerce_product_load_by_sku($__sku) ) {
+          smoy_set_title($__sku, $__title);
+          smoy_set_price($__sku, $__price);
+
+          // При необходимости можно изменить параметры ноды
+          if ($nid = smoy_get_nid_from_pid($commerce_product->product_id)) {
+            # code...
+          } else {
+            $new_product = array('title' => $__title, 'price' => $__price, 'pid' => $commerce_product->product_id);
+
+            #TODO: Создать функцию для создания связанных нод
+              $node = create_nodeproduct($new_product);
+          }
+        } else { // Создать товар и ноду если нет
+
+        }
+
+
+
+        if ( smoy_set_price($__sku, $__price)) {
+          $message = "[PRICE AUDIT] - " . $__sku . " - " . $__name . ": " . (int)$__price / 100 . " руб.";
+          watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
+        }
+
+
+
+
+
 
 
       }

@@ -172,6 +172,36 @@ function smoy_set_price ($_sku = NULL, $_price = NULL) {
 
 
 
+
+/**
+ * функция изменения цены продажи товара
+ * @param  string $_sku   SKU в моем складе должно быть уникальным
+ * @param  mixed  $_price цена в копейках
+ * @return bool
+ */
+function smoy_set_title ($_sku = NULL, $_title = NULL) {
+    if (is_null($_sku) || is_null($_title)) {
+        return false;
+    }
+
+    $_title = trim($_title);
+    $product = commerce_product_load_by_sku($_sku);
+    if ($product) {
+        $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
+        if ($pro_wrapper->title->value() != $_title) {
+            $pro_wrapper->title->set($_title);
+            $pro_wrapper->save();
+            return true;
+        } 
+    } 
+
+    return false;
+}
+
+
+
+
+
 /**
  * функция изменения закупочной цены товара
  * @param  string $_sku   SKU в моем складе должно быть уникальным
@@ -356,7 +386,7 @@ function smoy_get_nid_from_pid ( $_product_id = NULL ) {
     return $nid;
   }
 
-  return "dodod";
+  return false;
 }
 
 

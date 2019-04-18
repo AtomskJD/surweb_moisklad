@@ -77,17 +77,26 @@ function smoy_test_page() {
 
 $_sku = '008031';
 
-$product = commerce_product_load_by_sku($_sku);
-    if ($product) {
-        $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
-        // $pro_wrapper->commerce_price->amount->set(131313);
-        // $pro_wrapper->field_zakup->amount->set(101010);
-        // $pro_wrapper->save();
-        dpm((int)$pro_wrapper->commerce_price->amount->value() / 100 );
-        $product_id = $pro_wrapper->product_id->value();
-        dpm(smoy_get_nid_from_pid($product_id));
-        dpm($pro_wrapper->value());
+$commerce_product = commerce_product_load_by_sku($_sku);
+dpm(empty($commerce_product));
+  if ($commerce_product) {
+    $pro_wrapper = entity_metadata_wrapper('commerce_product', $commerce_product);
+    $pro_wrapper->title->set("Камера 12 дюймов прямой сосок 'DODOOD'");
+    $pro_wrapper->save();
+    dpm($pro_wrapper->value());
+    if ($nid = smoy_get_nid_from_pid($commerce_product->product_id)) {
+      $node = node_load($nid);
+      $node->title = "Камера 12 дюймов прямой сосок 'DODOOD'";
+      $node->language = LANGUAGE_NONE;
+      $node->field_tocart['und'][0]['product_id'] = 51;
+      dpm($node);
+      node_save($node);
+    } else {
+      dpm("NEED CONNECTED NODE");
     }
+  } else {
+    dpm ("NEED CORRECT SKU");
+  }
 
 
 
