@@ -442,3 +442,58 @@ function smoy_delete_from_queue ( $_href ) {
   return true;
 
 }
+
+
+
+
+
+
+function smoy_create_commerce_product ($params = array()) {
+  $sku    = $params['sku'];
+  $price  = $params['price'];
+  $title  = $params['title'];
+
+  if (commerce_product_load_by_sku($sku)) { return false; }
+
+  $product = commerce_product_new('product');
+  $product->sku = $sku;
+  $product->title = $title;
+  $product->language = LANGUAGE_NONE;
+  $product->uid = 1;
+  $product->commerce_price[LANGUAGE_NONE][0] = array(
+    'amount' => $price, // $10
+    'currency_code' => "RUB",
+  );
+  
+  if ( commerce_product_save($product) ) {
+    return $product;
+  } else return false;
+
+}
+
+
+
+
+
+function smoy_create_node_product ($params = array(), $node_type = 'products', $field_names = array('tid' => 'field_catalog', 'pid' => 'field_tocart')) {
+  $title  = $params['title'];
+  $tid    = $params['tid'];
+  $pid    = $params['pid'];
+
+  if (!$pid) { return false; }
+
+  $taxonomy_field_name  = $field_names['tid'];
+  $product_field_name   = $field_names['pid'];
+
+
+  $node = (object)array('type' => $node_type);
+  node_object_prepare($node);
+  $node->title = $title;
+  $node->language = LANGUAGE_NONE;
+  $node->uid = 1;
+  $node->${product_field_name}[LANGUAGE_NONE][]['product_id'] = $pid;
+  $node->${taxonomy_field_name}[LANGUAGE_NONE][]['tid']       = $tid;
+  node_save($node);
+
+  return $node;
+}

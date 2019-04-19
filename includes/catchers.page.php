@@ -352,26 +352,86 @@ function smoy_catcher_page__product() {
         // $product->data->group->meta = может не быть
 
         // данные документа
-        $__sku   = $product->data->code;
-        $__price = $product->data->salePrices[0]->value;
-        $__title = $product->data->name;
+        $__sku           = $product->data->code;
+        $__price         = $product->data->salePrices[0]->value;
+        $__title         = $product->data->name;
+        $__taxonomy_name = 'test';
 
+        if (isset($product->data->productFolder)) {
+          $_taxonomy = $moysklad->getRequestData($product->data->productFolder->meta->href);
+          if ( $_taxonomy->code == 200 ) {
+            $__taxonomy_name = $_taxonomy->data->name;
+          }
+        }
 
         // Проверить наличие товара и ноды на сайте
         if( $commerce_product = commerce_product_load_by_sku($__sku) ) {
           smoy_set_title($__sku, $__title);
           smoy_set_price($__sku, $__price);
 
-          // При необходимости можно изменить параметры ноды
+          // Если есть связаная нода
           if ($nid = smoy_get_nid_from_pid($commerce_product->product_id)) {
-            # code...
-          } else {
-            $new_product = array('title' => $__title, 'price' => $__price, 'pid' => $commerce_product->product_id);
+            $node = node_load($nid);
 
-            #TODO: Создать функцию для создания связанных нод
-              $node = create_nodeproduct($new_product);
+            if ($node->title !== $__title) {
+              $node->title = trim($__title);
+              node_save($node);
+            }
+            $taxonomy = taxonomy_get_term_by_name($__taxonomy_name);
+            $message = "[UPDATE NODE] - " . $__taxonomy_name;
+            watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
+
+            if (!empty($taxonomy)) {
+              #TODO: имена полей должны быть опциями функции для переносимости
+              if ( $node->field_catalog['und'][0]['tid'] != current($taxonomy)->tid) {
+                $node->field_catalog['und'][0]['tid'] = current($taxonomy)->tid;
+                node_save($node);
+              }
+            }
+          } 
+
+
+          // Если связаной ноды нет -> создаем
+          else {
+            $new_product = array('title' => $__title, 'pid' => $commerce_product->product_id);
+
+              $taxonomy = taxonomy_get_term_by_name($__taxonomy_name);
+
+              if (!empty($taxonomy)) {
+                $new_product['tid'] = current($taxonomy)->tid ? current($taxonomy)->tid : '';
+              }
+              $node = smoy_create_node_product($new_product);
           }
-        } else { // Создать товар и ноду если нет
+        } 
+
+        // Создать товар и ноду если Товар новый
+        else { 
+          $taxonomy = taxonomy_get_term_by_name($__taxonomy_name);
+
+          if (!empty($taxonomy)) {
+            $__tid = current($taxonomy)->tid ? current($taxonomy)->tid : '';
+          }
+
+
+          $new_product_params = array(
+            'title' => $__title,
+            'sku'   => $__sku,
+            'price' => $__price,
+            'tid'   => $__tid,
+            'pid'   => '',
+          );
+
+          if ($new_product = smoy_create_commerce_product($new_product_params)) {
+            $new_product_params['pid'] = $new_product->product_id;
+            $message = "[NEW PRODUCT] - " . $new_product->product_id;
+            watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
+            
+
+            if ($new_node = smoy_create_node_product($new_product_params)) {
+              $message = "[NEW NODE] - " . $new_node->nid;
+              watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
+            }
+          }
 
         }
 
@@ -379,7 +439,7 @@ function smoy_catcher_page__product() {
 
         if ( smoy_set_price($__sku, $__price)) {
           $message = "[PRICE AUDIT] - " . $__sku . " - " . $__name . ": " . (int)$__price / 100 . " руб.";
-          watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-type-2");
+          watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
         }
 
 
