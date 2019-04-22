@@ -354,6 +354,7 @@ function smoy_catcher_page__product() {
         // данные документа
         $__sku           = $product->data->code;
         $__price         = $product->data->salePrices[0]->value;
+        $__zakup         = $product->data->buyPrice->value;
         $__title         = $product->data->name;
         $__taxonomy_name = 'test';
 
@@ -368,6 +369,9 @@ function smoy_catcher_page__product() {
         if( $commerce_product = commerce_product_load_by_sku($__sku) ) {
           smoy_set_title($__sku, $__title);
           smoy_set_price($__sku, $__price);
+          smoy_set_zakup_price($__sku, $__zakup, false);
+
+
 
           // Если есть связаная нода
           if ($nid = smoy_get_nid_from_pid($commerce_product->product_id)) {
@@ -397,6 +401,7 @@ function smoy_catcher_page__product() {
 
               $taxonomy = taxonomy_get_term_by_name($__taxonomy_name);
 
+
               if (!empty($taxonomy)) {
                 $new_product['tid'] = current($taxonomy)->tid ? current($taxonomy)->tid : '';
               }
@@ -417,6 +422,7 @@ function smoy_catcher_page__product() {
             'title' => $__title,
             'sku'   => $__sku,
             'price' => $__price,
+            'zakup' => $__zakup,
             'tid'   => $__tid,
             'pid'   => '',
           );
@@ -441,7 +447,6 @@ function smoy_catcher_page__product() {
           $message = "[PRICE AUDIT] - " . $__sku . " - " . $__name . ": " . (int)$__price / 100 . " руб.";
           watchdog('moysklad_hook', $message, NULL, WATCHDOG_INFO, "/smoy-sync-product");
         }
-
 
 
 

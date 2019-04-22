@@ -75,13 +75,16 @@ function smoy_test_page() {
   ////////////////////
 
 
-$_sku = '008031';
+$_sku = '05';
+$nid = 2253;
 
-      $nid = 2253;
-      $node = node_load($nid);
-      $test = node_save($node);
+        $product = commerce_product_load_by_sku($_sku);
+        dpm($product);
+        $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
+        $pro_wrapper->field_zakup->set(array('amount' => 100, 'currency_code' => 'RUB'));
+        dpm($pro_wrapper->field_zakup->value());
+        dpm(empty($pro_wrapper->field_zakup->value()));
 
-        dpm($node);
 
 
 

@@ -208,7 +208,7 @@ function smoy_set_title ($_sku = NULL, $_title = NULL) {
  * @param  mixed  $_price цена в копейках
  * @return bool
  */
-function smoy_set_zakup_price ($_sku = NULL, $_price = NULL) {
+function smoy_set_zakup_price ($_sku = NULL, $_price = NULL, $_compare = true) {
     if (is_null($_sku) || is_null($_price)) {
         return false;
     }
@@ -217,11 +217,18 @@ function smoy_set_zakup_price ($_sku = NULL, $_price = NULL) {
     $product = commerce_product_load_by_sku($_sku);
     if ($product) {
         $pro_wrapper = entity_metadata_wrapper('commerce_product', $product);
-        if ((int)$pro_wrapper->field_zakup->amount->value() != $_price) {
+
+        if (empty($pro_wrapper->field_zakup->value())) {
+          $pro_wrapper->field_zakup->set(array('amount' => $_price, 'currency_code' => 'RUB'));
+          $pro_wrapper->save();
+          return true;
+        }
+
+        if ( ((int)$pro_wrapper->field_zakup->amount->value() != $_price) && $_compare) {
             $pro_wrapper->field_zakup->amount->set($_price);
             $pro_wrapper->save();
             return true;
-        } 
+        }
     } 
 
     return false;
@@ -448,10 +455,14 @@ function smoy_delete_from_queue ( $_href ) {
 
 
 
-function smoy_create_commerce_product ($params = array()) {
+function smoy_create_commerce_product ($params = array(), $field_names = array('zakup' => 'field_zakup', 'price' => 'commerce_price')) {
   $sku    = $params['sku'];
   $price  = $params['price'];
+  $zakup  = $params['zakup'];
   $title  = $params['title'];
+
+  $price_field_name = $field_names['price'];
+  $zakup_field_name = $field_names['zakup'];
 
   if (commerce_product_load_by_sku($sku)) { return false; }
 
@@ -460,8 +471,12 @@ function smoy_create_commerce_product ($params = array()) {
   $product->title = $title;
   $product->language = LANGUAGE_NONE;
   $product->uid = 1;
-  $product->commerce_price[LANGUAGE_NONE][0] = array(
-    'amount' => $price, // $10
+  $product->${price_field_name}[LANGUAGE_NONE][0] = array(
+    'amount' => $price, // 100x
+    'currency_code' => "RUB",
+  );
+  $product->${zakup_field_name}[LANGUAGE_NONE][0] = array(
+    'amount' => $zakup, // 100x
     'currency_code' => "RUB",
   );
   
