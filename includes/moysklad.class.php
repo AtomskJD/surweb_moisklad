@@ -609,19 +609,47 @@ class Moysklad
           $data     = '';
           
         } else {
-
-          $code     = $_resp_code;
-          $meta     = json_decode($return)->meta;
-          $size     = json_decode($return)->meta->size;
-          $data     = json_decode($return)->rows;
-          $message  = "Найдено " .$size. " заказов";
+            $code     = $_resp_code;
+            $meta     = json_decode($return)->meta;
+            $size     = json_decode($return)->meta->size;
+            $message  = "Найдено " .$size. " заказов";
+  
+          if (is_null($_search)) {
+            $data     = json_decode($return)->rows;
+          } else {
+            if ($data = $this->filterOrders(json_decode($return)->rows, $_search)) {
+              $code     = $_resp_code;
+            } else {
+              $code     = 201;
+              $data     = '';
+            }
+          }
 
         }
       }
     curl_close($process);
 
+
+
     return (object)array(
       'code'=>$code, 'message'=>$message, 'meta' => $meta, 'data' => $data);
+  }
+
+
+  /**
+   * фильтрация экземпляров выдачи моего склада 
+   * @param  [type] $_rows   Массив строк с результатами поиска
+   * @param  [type] $_filter Номер заказа для поиска на точное совпадение
+   * @return [type]          
+   */
+  private function filterOrders ($_rows, $_filter) {
+    foreach ($_rows as $row) {
+      if ($row->name == $_filter) {
+        return $row;
+      }
+    }
+
+    return false;
   }
 
 
@@ -951,12 +979,13 @@ class Moysklad
 
     }
 
-    $__order_id = '';
-    foreach ($_moyOrder->data as $row) {
-      if ($_name == $row->name) {
-        $__order_id = $row->id;
-      }
-    }
+
+    $__order_id = $_moyOrder->data->id;
+    // foreach ($_moyOrder->data as $row) {
+    //   if ($_name == $row->name) {
+    //     $__order_id = $row->id;
+    //   }
+    // }
 
     // exit 2
     if (empty($__order_id)) {
@@ -1054,11 +1083,6 @@ class Moysklad
     );
 
     /* == изменение статуса заказа == */
-    // if ($order_status == 'canceled') {
-    //   $_state = $this->getStates( 'customerorder', 'Отменен' );
-    //   $body['state'] = array('meta' => $_state->data->meta);
-    // }
-
     if ($order_status) {
       $order_status_moysklad = smoy_commerce_to_moysklad_state_conv($order_status);
       $_state = $this->getStates( 'customerorder', $order_status_moysklad );
@@ -1085,40 +1109,43 @@ class Moysklad
         $code     = $_resp_code;
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error . " (" . __METHOD__ . "-->" . __LINE__ . ")";
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
-      } else {
+      } 
 
+      else {
         $code     = $_resp_code;
         $name     = json_decode($return)->name;
         $data     = json_decode($return);
         $meta     = json_decode($return)->meta;
         $message  = "Обновлен заказ " .$name;
+     
+
+        /**
+         * создание документа отгрузки для завершенного заказа
+         */
+        if (isset($_moyOrder->data->demands)) {
+          $demands = $_moyOrder->data->demands;
+          foreach ($demands as $demand) {
+            $_demandResp = $this->getRequestData($demand->meta->href);
+            if ( $_demandResp->code == 200 ) {
+              $_demand_del_resp = $this->delDemand( $_demandResp->data->id );
+            }
+          }
+        }
+
+        if ( smoy_order_status_is_complete ($order_status) ) {
+          $_demandTemplate = $this->getDemandTemplate($meta);
+          if ( $_demandTemplate->code == 200 ) {
+            $_demand = $this->setDemand($_demandTemplate->data);
+            if ( $_demand->code != 200 ) {
+              watchdog('moysklad', 'Не удалось создать отгрузку', NULL, WATCHDOG_ERROR, $this->url . $path . $query);
+              # code...
+            }
+          }
+        }
         
       }
     curl_close($process);
 
-    /**
-     * создание документа отгрузки для завершенного заказа
-     */
-    if (isset($_moyOrder->data[0]->demands)) {
-      $demands = $_moyOrder->data[0]->demands;
-      foreach ($demands as $demand) {
-        $_demandResp = $this->getRequestData($demand->meta->href);
-        if ( $_demandResp->code == 200 ) {
-          $_demand_del_resp = $this->delDemand( $_demandResp->data->id );
-        }
-      }
-    }
-
-    if ( smoy_order_status_is_complete ($order_status) ) {
-      $_demandTemplate = $this->getDemandTemplate($meta);
-      if ( $_demandTemplate->code == 200 ) {
-        $_demand = $this->setDemand($_demandTemplate->data);
-        if ( $_demand->code != 200 ) {
-          watchdog('moysklad', 'Не удалось создать отгрузку', NULL, WATCHDOG_ERROR, $this->url . $path . $query);
-          # code...
-        }
-      }
-    }
 
 
     return (object)array(
@@ -1146,12 +1173,12 @@ class Moysklad
     $_name = $_order->order_id;
 
     $_moyOrder = $this->getCustomerOrders($_name);
-    $__order_id = '';
-    foreach ($_moyOrder->data as $row) {
-      if ($_name == $row->name) {
-        $__order_id = $row->id;
-      }
-    }
+    $__order_id = $_moyOrder->data->id;
+    // foreach ($_moyOrder->data as $row) {
+    //   if ($_name == $row->name) {
+    //     $__order_id = $row->id;
+    //   }
+    // }
 
     $path   = '/entity/customerorder';
     $query  = '/' . $__order_id;

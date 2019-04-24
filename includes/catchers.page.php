@@ -151,6 +151,7 @@ function smoy_catcherTwo_page() {
       $document = $moysklad->getRequestData($operationURL);
 
       if ($document->code == 200) {
+        sleep(2);
         /*=================================
         =            positions            =
         =================================*/
