@@ -212,6 +212,11 @@ class Moysklad
    */
   public function getStates( $_entity = 'customerorder', $_search = NULL ) {
 
+    /* defaults */
+    $data     = '';
+    $meta     = '';
+    $message  = '';
+
     $path = '/entity/' . $_entity . '/metadata';
 
     $process = curl_init($this->url . $path);
@@ -227,21 +232,35 @@ class Moysklad
         $message  = "[$_resp_code] - " . json_decode($return)->errors[0]->error;
         watchdog('moysklad', $message, NULL, WATCHDOG_ERROR, $this->url . $path . $query);
       } else {
-        $code     = $_resp_code;
-        
-        $meta     = json_decode($return)->meta;
-        $data     = json_decode($return)->states;
-        $message  = "Данные статусов";
+        if (empty(json_decode($return)->states)) {
+          $code     = 201;
+          $message  = "Данные статуса " . $_search . ". НЕ найдены!";
+          $meta     = '';
+          $data     = '';
+          
+        } else {
+          $code     = $_resp_code;
+          
+          $meta     = json_decode($return)->meta;
+          $data     = json_decode($return)->states;
+          $message  = "Данные статусов";
+
+          if (is_null($_search)) {
+            $data     = json_decode($return)->states;
+          } 
+          else {
+            if ($data = $this->filterByName(json_decode($return)->states, $_search)) {
+              $code     = $_resp_code;
+            } else {
+              $code     = 201;
+              $data     = '';
+            }
+          }
+        }
       }
     curl_close($process);
 
-    if (!is_null($_search)) {
-      foreach ($data as $state) {
-        if ($state->name == $_search) {
-          $data = $state;
-        }
-      }
-    }
+
 
     return (object)array('code'=>$code, 'message'=>$message, 'data' => $data, 'meta' => $meta);
   }
@@ -616,8 +635,9 @@ class Moysklad
   
           if (is_null($_search)) {
             $data     = json_decode($return)->rows;
-          } else {
-            if ($data = $this->filterOrders(json_decode($return)->rows, $_search)) {
+          } 
+          else {
+            if ($data = $this->filterByName(json_decode($return)->rows, $_search)) {
               $code     = $_resp_code;
             } else {
               $code     = 201;
@@ -636,13 +656,16 @@ class Moysklad
   }
 
 
+
+
+
   /**
    * фильтрация экземпляров выдачи моего склада 
    * @param  [type] $_rows   Массив строк с результатами поиска
    * @param  [type] $_filter Номер заказа для поиска на точное совпадение
    * @return [type]          
    */
-  private function filterOrders ($_rows, $_filter) {
+  private function filterByName ($_rows, $_filter) {
     foreach ($_rows as $row) {
       if ($row->name == $_filter) {
         return $row;
@@ -954,6 +977,10 @@ class Moysklad
    * @return Object   Интерфейсный объект
    */
   public function putCustomerOrder( $_order = NULL ) {
+    /* defaults */
+    $meta = '';
+    $data = (object)array();
+
     if (is_null($_order)) {
       $code = 400;
       $message  = "[$code] - Order обязательный параметр (" . __METHOD__ . "-->" . __LINE__ . ")";
@@ -1086,7 +1113,11 @@ class Moysklad
     if ($order_status) {
       $order_status_moysklad = smoy_commerce_to_moysklad_state_conv($order_status);
       $_state = $this->getStates( 'customerorder', $order_status_moysklad );
-      $body['state'] = array('meta' => $_state->data->meta);
+      if ( $_state->code == 200 ) {
+        $body['state'] = array('meta' => $_state->data->meta);
+      } else {
+        $body['state'] = array('meta' => '');
+      }
       
     }
 
@@ -1270,6 +1301,10 @@ class Moysklad
    * ...->data   -  предзаполненый запрос для отправки POST запросом
    */
   public function getDemandTemplate ( $_customerOrderMeta = NULL ) {
+    /* defaults */
+    $meta = (object)array();
+    $data = (object)array();
+
     if (is_null($_customerOrderMeta)) {
       $code = 400;
       $message = 'Метаданные заказа не доставлены';
@@ -1302,7 +1337,7 @@ class Moysklad
 
         $code     = $_resp_code;
         $data     = json_decode($return);
-        $meta     = json_decode($return)->meta;
+        $meta     = json_decode($return);
         $message  = "Получен шаблон для отгрузки";
         
       }
